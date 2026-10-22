@@ -1,0 +1,5 @@
+export const accountDomain='users.hrvec-andaman2.invalid';
+export function normalizeUsername(value){const name=String(value||'').trim().toLowerCase();if(!/^[a-z0-9][a-z0-9._-]{2,49}$/.test(name))throw Error('ชื่อผู้ใช้ต้องเป็น a–z ตัวเลข . _ หรือ - จำนวน 3–50 ตัวอักษร');return name;}
+export function loginEmail(value){const name=String(value||'').trim().toLowerCase();return name.includes('@')?name:normalizeUsername(name)+'@'+accountDomain;}
+export function validatePassword(password,current=''){if(typeof password!=='string'||password.length<8||new TextEncoder().encode(password).length>72||!/[\p{L}]/u.test(password)||!/[0-9]/.test(password))throw Error('รหัสผ่านใหม่ต้องมีอย่างน้อย 8 ตัวอักษร มีตัวอักษรและตัวเลข และยาวไม่เกิน 72 ไบต์');if(password===current)throw Error('กรุณากำหนดรหัสผ่านใหม่ที่ต่างจากรหัสเดิม');return password;}
+export function suggestedUsername(person){const prefix=['rnt','png','pkt','pkv','kbi','trt','tic'][Number(person.school_id)-1]||'hr';const code=String(person.employee_code||'').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,30)||String(person.id||'').replace(/[^a-z0-9]/g,'').slice(0,12);return prefix+'.'+code;}

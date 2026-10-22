@@ -1,0 +1,8 @@
+[functions.hr-bridge]
+verify_jwt = false
+# The function ALWAYS validates the bearer with auth.getUser() before any action.
+# This also supports projects using asymmetric JWT signing keys.
+
+[functions.hr-accounts]
+verify_jwt = false
+# Validates auth.getUser plus the database session gate before every action.
