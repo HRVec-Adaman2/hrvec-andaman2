@@ -1,0 +1,10 @@
+{
+  "name": "hrvec-andaman2",
+  "version": "1.7.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "check": "node --check dist/app.js && node --check dist/core.js && node --check dist/api.js && node --check dist/importer.js && node --check dist/overview.js && node --check dist/icons.js && node --check dist/changes.js && node --check dist/accounts.js && node --check supabase/functions/hr-accounts/service.js && node --check scripts/bootstrap-admin.mjs"
+  }
+}
