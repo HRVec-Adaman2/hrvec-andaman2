@@ -32,7 +32,7 @@ export function validateImport(matrix,existing,schools,lookups=[]){
   const p=rowObject(row,headers);for(const k of ['birth_date','start_date'])p[k]=normalizedDate(p[k]);
   for(const k of headers.filter(k=>!['birth_date','start_date','school_id','education_majors'].includes(k)))p[k]=trim(p[k]);
   p.education_majors=parseEducationMajors(p.education_majors);
-  const school=schools.find(s=>String(s.id)===trim(p.school_id)||s.name===trim(p.school_id));if(!school)throw Error('ไม่พบสถานศึกษาในระบบ');p.school_id=school.id;
+  const school=schools.find(s=>String(s.id)===trim(p.school_id)||s.name===trim(p.school_id));if(!school)throw Error('ไม่พบสถานศึกษาในระบบ');if(school.is_active===false)throw Error('สถานศึกษาปิดใช้งานแล้ว');p.school_id=school.id;
   for(const k of ['position','status','department','academic_rank','email','phone','address','highest_education'])p[k]??='';p.position||='ครู';p.status||='ปฏิบัติงาน';
   validatePerson(p);if(p.employee_code.length>50||p.full_name.length>200)throw Error('เลขที่ตำแหน่งหรือชื่อยาวเกินกำหนด');
   if(codes.has(p.employee_code))throw Error('เลขที่ตำแหน่งซ้ำในไฟล์หรือระบบ: '+p.employee_code);codes.add(p.employee_code);
@@ -65,7 +65,7 @@ export async function readImportFile(file,xlsx){
  if(!file?.size||file.size>5*1024*1024)throw Error('เลือกไฟล์ขนาดไม่เกิน 5 MB');
  if(/\.csv$/i.test(file.name))return {matrix:parseCSV(await file.text()),certificateMatrix:[],sheetName:'CSV'};
  if(!/\.xlsx$/i.test(file.name))throw Error('รองรับ .xlsx และ .csv');if(!xlsx)throw Error('ตัวอ่าน Excel ยังไม่พร้อม กรุณาลองใหม่หรือใช้ CSV');
- const wb=xlsx.read(await file.arrayBuffer(),{type:'array',cellDates:true,cellFormula:true});
+ const wb=await xlsx.read(await file.arrayBuffer(),{type:'array',cellDates:true,cellFormula:true});
  const sheetName=wb.SheetNames.includes('บุคลากร')?'บุคลากร':wb.SheetNames[0];
  if(['ตัวอย่าง','ตัวอย่างใบรับรอง','ใบรับรองวิชาชีพ','รายการอ้างอิง','คำแนะนำ'].includes(sheetName))throw Error('โปรดใช้ชีตชื่อ บุคลากร สำหรับข้อมูลที่ต้องการนำเข้า');
  const read=name=>{const sheet=wb.Sheets[name];const range=xlsx.utils.decode_range(sheet['!ref']||'A1');if(range.e.r>10000||range.e.c>50)throw Error('ขอบเขตชีต '+name+' ใหญ่เกินไป กรุณาใช้แม่แบบ');

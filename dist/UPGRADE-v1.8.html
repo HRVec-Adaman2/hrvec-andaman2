@@ -1,0 +1,144 @@
+<!doctype html><html lang="th"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>คู่มือ HRVec-Andaman2 รุ่น 1.8</title><style>body{font:16px/1.85 Tahoma,sans-serif;color:#203b59;background:#f4f7fd;max-width:1050px;margin:auto;padding:40px}main{padding:42px;background:white;border:1px solid #dce7f5;border-radius:20px}h1,h2,h3{color:#315b91;line-height:1.45}h1{font-size:28px}h2{margin-top:36px;font-size:21px;border-bottom:1px solid #dce7f5;padding-bottom:10px}a{color:#255bb0;overflow-wrap:anywhere}table{border-collapse:collapse;width:100%;margin:15px 0}th,td{border:1px solid #dce7f5;padding:12px;text-align:left;vertical-align:top}th{background:#edf3ff}pre{padding:18px;background:#f0f5fc;border:1px solid #dce7f5;border-radius:12px;overflow:auto}code{font-size:13px}p,li{overflow-wrap:anywhere}img{max-width:100%;height:auto;border:1px solid #dce7f5;border-radius:14px}.scroll{overflow:auto}@media(max-width:640px){body{padding:12px}main{padding:20px}h1{font-size:23px}th,td{padding:9px}}@media print{body{padding:0;background:white}main{padding:0;border:0}pre{white-space:pre-wrap}img{max-height:230mm;object-fit:contain}h2{break-after:avoid}tr{break-inside:avoid}}</style><main><h1>HRVec-Andaman2 รุ่น 1.8 — คู่มืออัปเกรดและใช้งาน</h1>
+<p>จัดทำ 22 ตุลาคม 2569</p>
+<h2>สถานะก่อนนำขึ้นระบบจริง</h2>
+<p>ชุดนี้มีโค้ดหน้าเว็บ ฐานข้อมูล ฟังก์ชันหลังบ้าน Apps Script และการทดสอบครบสำหรับรุ่น 1.8 หน้าสาธิตใช้ข้อมูลสมมติในเบราว์เซอร์</p>
+<p><strong>การอัปเกรดฐานข้อมูลจริงและ Edge Functions ยังไม่ได้ดำเนินการ</strong> การตรวจอนุมัติอัตโนมัติขอการยืนยันก่อนเพิ่มบทบาทและเปลี่ยนกฎ RLS ของ production ต้องอนุมัติการอัปเกรดก่อนใช้ขั้นตอนที่เปลี่ยนระบบจริงด้านล่าง ไม่มีการมอบหมายสิทธิ์ให้บุคคลจริงหรือรีเซ็ตรหัสผ่านระหว่างพัฒนา</p>
+<p>โครงการ HR ที่ถูกต้องคือ <code>oftlfxiywhtoftxluviv</code> ไม่ใช้โครงการเก่า <code>unbxltvodbcesqcmorjk</code></p>
+<h2>1. เปิดไฟล์และเตรียมโปรแกรม</h2>
+<div class="scroll"><table>
+<tr><th>งาน</th><th>โปรแกรม</th><th>จุดที่เปิด</th></tr>
+<tr><td>แตกไฟล์</td><td>File Explorer</td><td>คลิกขวา ZIP → Extract All</td></tr>
+<tr><td>เปิดโค้ด</td><td>VS Code</td><td>File → Open Folder เลือกโฟลเดอร์ที่มี package.json</td></tr>
+<tr><td>ปรับฐานข้อมูล</td><td>Chrome หรือ Edge</td><td>Supabase Dashboard → โครงการ HR → SQL Editor</td></tr>
+<tr><td>Deploy ฟังก์ชัน</td><td>VS Code Terminal</td><td>Terminal → New Terminal ใช้ Command Prompt หรือ npx.cmd ใน PowerShell</td></tr>
+<tr><td>ส่งหน้าเว็บ</td><td>VS Code และ GitHub</td><td>Source Control → Commit → Sync Changes</td></tr>
+<tr><td>ปรับระบบ Google</td><td>Chrome หรือ Edge</td><td>โครงการ Apps Script เดิม</td></tr>
+</table></div>
+<p>ZIP สำหรับ GitHub ใช้โครงสร้างรากโดยตรง ต้องพบ <code>package.json</code>, <code>dist</code>, <code>supabase</code>, <code>apps-script</code>, <code>scripts</code>, <code>tests</code>, <code>docs</code>, <code>deployment</code>, <code>.github</code>, <code>.gitignore</code>, <code>.env.example</code> อย่าอัปโหลด ZIP เป็นไฟล์เดียวหรือสร้างโฟลเดอร์ครอบซ้ำ หากไม่เห็นไฟล์ที่ขึ้นต้นด้วยจุด ให้เปิด File Explorer → View → Show → Hidden items</p>
+<p>เก็บสำเนาโค้ดรุ่นเดิมและค่าการเชื่อมต่อก่อนอัปเกรด หากมีข้อมูลจริงแล้วให้สำรองฐานข้อมูลและไฟล์ Drive ด้วย การสำรอง JSON ของแอปเก็บทะเบียนและรายการอ้างอิงไฟล์ ไม่ได้คัดลอกไฟล์แนบทั้งหมดและไม่ได้สำรองรหัสผ่าน Auth</p>
+<h2>2. อัปเกรดฐานข้อมูลเดิมจากรุ่น 1.7</h2>
+<p>ใช้ Chrome หรือ Edge เปิด https://supabase.com/dashboard/project/oftlfxiywhtoftxluviv</p>
+<ol>
+<li>เลือก SQL Editor → New query</li>
+<li>ใช้ VS Code เปิด <code>supabase/migrations/20261022051533_school_delegation_v18.sql</code></li>
+<li>คัดลอกทั้งไฟล์ไปวางใน SQL Editor ของโครงการ HR</li>
+<li>หลังอนุมัติการอัปเกรด production แล้ว กด Run หนึ่งครั้ง</li>
+<li>ตรวจด้วยคำสั่งต่อไปนี้ ต้องได้ <code>1.8.0</code></li>
+</ol>
+<pre><code>select public.hr_schema_version();</code></pre>
+<ol>
+<li>Table Editor ต้องมีตารางเดิมครบ และเพิ่ม <code>school_assignments</code>, <code>administration_changes</code></li>
+<li>ตาราง <code>schools</code> เพิ่ม <code>is_active</code> และ <code>revision</code> รหัสสถานศึกษาและบัญชีเดิมคงอยู่</li>
+</ol>
+<p><strong>ฐานข้อมูลเดิมห้ามรัน schema.sql ติดตั้งทับ และห้ามรัน migration รุ่น 1.7 ตามหลังรุ่น 1.8</strong> เพราะจะนำกฎเดิมกลับมาใช้ สำหรับโครงการใหม่ว่างเท่านั้นให้ใช้ <code>supabase/schema.sql</code> ฉบับเต็ม ซึ่งรวมรุ่น 1.8 แล้ว</p>
+<p>หากต้องการตรวจว่าติดตั้งฟังก์ชันรุ่นหรือยัง ให้ใช้ <code>select to_regprocedure(&#x27;public.hr_schema_version()&#x27;);</code> ค่า NULL หมายถึงยังไม่มีฟังก์ชันนี้</p>
+<h2>3. เผยแพร่ฟังก์ชันหลังบ้าน</h2>
+<p>ใน VS Code เปิดโฟลเดอร์หลักรุ่น 1.8 → Terminal → New Terminal รันทีละคำสั่งและรอจนเสร็จ</p>
+<pre><code>node --version
+npx.cmd supabase --version
+npx.cmd supabase login
+npx.cmd supabase link --project-ref oftlfxiywhtoftxluviv
+npx.cmd supabase functions deploy hr-bridge --project-ref oftlfxiywhtoftxluviv --no-verify-jwt --use-api
+npx.cmd supabase functions deploy hr-accounts --project-ref oftlfxiywhtoftxluviv --no-verify-jwt --use-api
+npx.cmd supabase functions list --project-ref oftlfxiywhtoftxluviv</code></pre>
+<p>ใช้ npx.cmd เพื่อหลีกเลี่ยง npx.ps1 ถูกบล็อก ไม่ต้องเปลี่ยน Execution Policy ของ Windows ตัวเลือก --use-api ทำให้ไม่ต้องใช้ Docker สำหรับ Deploy นี้ ทั้งสองฟังก์ชันยังตรวจผู้ใช้ บัญชี เซสชัน และสิทธิ์ภายในโค้ด</p>
+<p>เปิด Supabase → Edge Functions → Secrets ตรวจ:</p>
+<div class="scroll"><table>
+<tr><th>ชื่อ</th><th>นำค่ามาจาก</th></tr>
+<tr><td>GAS_URL</td><td>Apps Script → Deploy → Manage deployments → Web app URL ลงท้าย /exec</td></tr>
+<tr><td>BRIDGE_SECRET</td><td>ข้อความสุ่มเดิม 64 ตัวอักษร ต้องตรงกับ Script Properties ของ Apps Script</td></tr>
+<tr><td>ALLOWED_ORIGINS</td><td>Origin ของหน้าเว็บ มี scheme และ hostname ไม่มี path หรือ / ปิดท้าย</td></tr>
+</table></div>
+<p>สำหรับเว็บไซต์ในโครงการนี้ใช้ ALLOWED_ORIGINS:</p>
+<pre><code>https://hrvec-adaman2.github.io,https://hr-andaman2.muangyor.chatgpt.site</code></pre>
+<p>เจ้าของ GitHub คือ <code>HRVec-Adaman2</code> ส่วน Repository คือ <code>hrvec-andaman2</code> สะกดต่างกัน ไม่ใส่ /hrvec-andaman2 ต่อท้าย Origin ไม่ส่ง .env.bootstrap ขึ้น Secrets หรือ GitHub</p>
+<h2>4. อัปเดต Apps Script เดิม</h2>
+<ol>
+<li>เปิดโครงการ Apps Script เดิมใน Chrome หรือ Edge</li>
+<li>แทนเนื้อหา Code.gs ด้วย <code>apps-script/Code.gs</code> ของรุ่นนี้ แล้ว Save</li>
+<li>Script Properties เดิมต้องยังมี DRIVE_FOLDER_ID, SHEET_ID, BRIDGE_SECRET, SUPABASE_URL และ SUPABASE_SERVICE_ROLE_KEY ของโครงการ HR</li>
+<li>เลือก Deploy → Manage deployments → แก้ไข Deployment เดิม → New version → Deploy เพื่อเก็บ URL /exec เดิม</li>
+<li>หากสร้าง Deployment ใหม่จน URL เปลี่ยน ต้องแก้ GAS_URL ใน Supabase Secrets ให้ตรง</li>
+</ol>
+<p>การอัปเดตนี้ทำให้สำรองรายวันรวมตารางสิทธิ์และประวัติใหม่ด้วย เก็บไฟล์เอกสาร Drive แบบส่วนตัวตามเดิม</p>
+<h2>5. เผยแพร่หน้าเว็บ GitHub Pages</h2>
+<p>Repository: https://github.com/HRVec-Adaman2/hrvec-andaman2</p>
+<p>เว็บไซต์: https://hrvec-adaman2.github.io/hrvec-andaman2/</p>
+<ol>
+<li>แตก GitHub Source ZIP รุ่น 1.8 แล้วแทนไฟล์โค้ดเดิมทั้งชุดในโฟลเดอร์โครงการ เก็บ .env และ .env.bootstrap ไว้เฉพาะเครื่องผู้ติดตั้ง</li>
+<li>ชุด GitHub Source สำหรับส่งมอบตั้ง <code>dist/config.js</code> ให้โครงการ HR แล้ว หากใช้โค้ดจากหน้าสาธิต ให้คัดลอก <code>deployment/config.production.js</code> เป็น <code>dist/config.js</code> หลังอัปเกรดฐานข้อมูลและฟังก์ชันแล้ว</li>
+<li>ตรวจว่า config.js ใช้ URL โครงการ HR และ publishable key ห้ามใส่ service_role หรือ sb_secret ในหน้าเว็บ</li>
+<li>รัน <code>npm run check</code> และ <code>npm test</code> ใน Terminal</li>
+<li>VS Code → Source Control → ตรวจว่าไม่มี .env/.env.bootstrap → Commit → Sync Changes</li>
+<li>ทางเลือกผ่าน Chrome: เปิดราก Repository → Add file → Upload files → ลากไฟล์และโฟลเดอร์ที่แตกแล้วทั้งชุด ไม่ลาก ZIP หรือโฟลเดอร์ครอบด้านนอก</li>
+<li>ตรวจ package.json และ .github/workflows/pages.yml อยู่ตำแหน่งเดิม รวมทั้ง .gitignore กับ .env.example</li>
+<li>GitHub → Settings → Pages → Source: GitHub Actions</li>
+<li>Actions → Deploy HRVec-Andaman2 to GitHub Pages → รอสีเขียว หรือ Run workflow → main</li>
+<li>เปิดเว็บไซต์ กด Ctrl + F5 และเข้าสู่ระบบใหม่</li>
+</ol>
+<p>GitHub Pages กับ https://hr-andaman2.muangyor.chatgpt.site เป็นคนละการเผยแพร่ การอัปเดตเว็บไซต์หนึ่งไม่อัปเดตอีกเว็บไซต์อัตโนมัติ หน้าสาธิตในแชตคง config.js ว่างเพื่อใช้ข้อมูลสมมติ</p>
+<h2>6. เพิ่ม/แก้ไข/ปิดใช้งาน/ลบสถานศึกษา</h2>
+<p>เปิดเว็บไซต์จริงใน Chrome หรือ Edge เข้าบัญชี admin ด้วยรหัสปัจจุบัน การอัปเกรดไม่รีเซ็ตรหัสเดิมและไม่ต้อง bootstrap admin ซ้ำ</p>
+<ul>
+<li><strong>เพิ่ม:</strong> ตั้งค่าระบบ → สถานศึกษา → เพิ่มสถานศึกษา → กรอกชื่อ จังหวัด เหตุผล → บันทึก รหัสสร้างอัตโนมัติ รองรับเกิน 7 แห่ง</li>
+<li><strong>แก้ไข:</strong> เลือกแถว → แก้ไข → กรอกข้อมูลและเหตุผล → บันทึก</li>
+<li><strong>ปิดใช้งาน:</strong> เก็บบุคลากรและประวัติเดิม หยุดเพิ่ม/นำเข้าบุคลากรใหม่ เจ้าหน้าที่ยังอ่านข้อมูลที่รับผิดชอบได้ แต่เขียนข้อมูลของสถานศึกษาที่ปิดไม่ได้ แอดมินยังตรวจและแก้ไขข้อมูลเดิมได้</li>
+<li><strong>เปิดใช้งาน:</strong> กดเปิดใช้งาน ระบุเหตุผล การมอบหมายเดิมจะกลับมามีผลตามสิทธิ์</li>
+<li><strong>ลบถาวร:</strong> ใช้ได้เฉพาะเมื่อไม่มีบุคลากรหรือสิทธิ์อ้างอิง ต้องกรอกรหัสสถานศึกษาซ้ำและยืนยัน บุคลากรในรายการที่ลบก็ถือเป็นข้อมูลอ้างอิง จึงควรปิดใช้งานเมื่อมีประวัติแล้ว</li>
+</ul>
+<p>อย่าเปลี่ยนชื่อสถานศึกษาเดิมเพื่อแทนการเพิ่มสถานศึกษาใหม่ เพราะบุคลากรเดิมยังอ้างอิงรหัสเดิม</p>
+<h2>7. มอบหมายเจ้าหน้าที่ตามความรับผิดชอบ</h2>
+<ol>
+<li>เพิ่มหรือนำเข้าทะเบียนบุคลากรของเจ้าหน้าที่ก่อน</li>
+<li>แอดมินเปิด จัดการบัญชี → เลือกรายชื่อ → สร้างบัญชี กำหนด Username และรหัสเริ่มต้นแยกคน</li>
+<li>ผู้ใช้เข้าสู่ระบบและเปลี่ยนรหัสเริ่มต้นตามที่ระบบกำหนด</li>
+<li>แอดมินเปิด จัดการบัญชี → กำหนดสิทธิ์ ของบุคคลนั้น</li>
+<li>เลือกสถานศึกษาที่รับผิดชอบ อาจต่างจากสถานศึกษาที่เจ้าหน้าที่สังกัดได้</li>
+<li>เลือก ทั้งสถานศึกษา หรือ เฉพาะรายชื่อที่เลือก แล้วติ๊กรายชื่อ</li>
+<li>เลือกสิทธิ์ตามงาน ระบุเหตุผล และบันทึก</li>
+<li>ให้ผู้ใช้เข้าสู่ระบบใหม่ เซสชันเดิมจะใช้ต่อไม่ได้หลังเปลี่ยนสิทธิ์</li>
+<li>หากรับผิดชอบหลายวิทยาลัย ให้มอบหมายแยกสถานศึกษา บัญชีเดียวมีหลายการมอบหมายได้</li>
+</ol>
+<p><img alt="ตัวอย่างแบบฟอร์มกำหนดสิทธิ์ในโหมดสาธิต" src="guide-images/permissions-v1.8.jpg"></p>
+<div class="scroll"><table>
+<tr><th>สิทธิ์</th><th>ขอบเขตงาน</th></tr>
+<tr><td>ดูข้อมูล</td><td>แฟ้ม ประวัติ เอกสาร และรายงานเฉพาะขอบเขตที่มอบหมาย</td></tr>
+<tr><td>เพิ่มบุคลากร</td><td>รายชื่อใหม่ในสถานศึกษาที่รับผิดชอบ ใช้ร่วมกับสิทธิ์แก้ไขทะเบียน</td></tr>
+<tr><td>แก้ไขทะเบียนและข้อมูลติดต่อ</td><td>ชื่อ เลขที่ตำแหน่ง ตำแหน่ง ฝ่าย วิทยฐานะ วันเกิด วันเริ่มงาน และข้อมูลติดต่อ</td></tr>
+<tr><td>แก้ไขวุฒิและสาขาวิชา</td><td>วุฒิสูงสุดและสาขา แยกจากสิทธิ์ทะเบียน</td></tr>
+<tr><td>จัดการใบรับรอง</td><td>เพิ่มและแก้ใบรับรองของรายชื่อที่รับผิดชอบ</td></tr>
+<tr><td>อัปโหลดเอกสาร</td><td>ส่งเอกสารเข้าสถานะรอตรวจ แอดมินอนุมัติ/ส่งกลับ</td></tr>
+<tr><td>นำเข้า Excel</td><td>รายชื่อใหม่ตามแม่แบบ ต้องมีสิทธิ์เพิ่มบุคลากรและแก้ไขทะเบียน</td></tr>
+<tr><td>ส่งคำขอลบ</td><td>ส่งคำขอให้แอดมินพิจารณา ไม่ลบหรือกู้คืนเอง</td></tr>
+</table></div>
+<p>เพิ่มบุคลากรและนำเข้า Excel ใช้ได้เมื่อรับผิดชอบทั้งสถานศึกษา เมื่อเลือกเฉพาะรายชื่อ ระบบจะปิดสองตัวเลือกนี้ การนำเข้าวุฒิหรือใบรับรองต้องมีสิทธิ์ข้อมูลส่วนนั้นด้วย</p>
+<p>เจ้าหน้าที่ไม่สามารถย้ายสถานศึกษาของบุคลากร ผูกบัญชี จัดการบัญชีคนอื่น เปลี่ยนสิทธิ์ อนุมัติเอกสาร ลบจริง หรือกู้คืนรายการ บุคลากรทั่วไปยังดูแลข้อมูลติดต่อ รูปโปรไฟล์ และเอกสารของตนเองได้</p>
+<h2>8. แก้ไขหรือถอนสิทธิ์</h2>
+<p>จัดการบัญชี → ส่วนสิทธิ์เจ้าหน้าที่สถานศึกษา → แก้ไขสิทธิ์ หรือ ถอนสิทธิ์ → ระบุเหตุผล → บันทึก แล้วให้ผู้ใช้เข้าสู่ระบบใหม่ หากถอนทุกการมอบหมาย บัญชีจะกลับเป็นบุคลากรทั่วไปและยังมีแฟ้มตนเอง</p>
+<p>ปิดใช้งานสถานศึกษาจะเก็บการมอบหมายไว้ หากยกเลิกหน้าที่ถาวรให้ถอนสิทธิ์ด้วย ส่วนพักบัญชีทำให้เข้าใช้งานไม่ได้ทั้งบัญชี แอดมินยังรีเซ็ตรหัสและเปิด/พักบัญชีเจ้าหน้าที่ได้</p>
+<h2>9. นำเข้าข้อมูลพร้อมใบรับรอง</h2>
+<p>ข้อมูลบุคลากร → ดาวน์โหลดแม่แบบ .xlsx ปุ่มนี้สร้างไฟล์ตามรายการสถานศึกษาและสิทธิ์ปัจจุบัน</p>
+<ul>
+<li>ชีต บุคลากร หนึ่งคนต่อหนึ่งแถว employee_code คือเลขที่ตำแหน่ง ไม่ต้องมีคอลัมน์สถานะ</li>
+<li>ชีต ใบรับรองวิชาชีพ หนึ่งใบต่อหนึ่งแถว ใช้ employee_code เดิมซ้ำได้เมื่อเป็นคนเดียวกัน ไม่เพิ่มคอลัมน์ใบที่ 2/3</li>
+<li>หลายสาขาของวุฒิสูงสุดเดียวกันคั่นด้วย <code>;</code> ใน education_majors</li>
+<li>เลขที่ตำแหน่งและโทรศัพท์ใช้รูปแบบข้อความเพื่อรักษาศูนย์นำหน้า วันที่ใช้ YYYY-MM-DD ค.ศ.</li>
+<li>ชีต รายการอ้างอิง แสดงรหัสสถานศึกษา ชีตตัวอย่างไม่นำเข้าอัตโนมัติ</li>
+<li>อัปโหลด → ตรวจข้อมูล → ยืนยัน หากแถวหนึ่งผิดหรือนอกสิทธิ์ ทั้งชุดจะไม่ถูกบันทึก</li>
+<li>นำเข้าเพื่อเพิ่มรายชื่อใหม่ การแก้ไขข้อมูลเดิมใช้เมนูแก้ไขและตรวจประวัติ</li>
+</ul>
+<h2>10. ตรวจหลังติดตั้งและแก้ปัญหา</h2>
+<p>ทดสอบด้วยบัญชีแอดมิน เจ้าหน้าที่ และบุคลากรจริงหลังติดตั้ง: เข้าระบบด้วยบัญชีเดิม เพิ่มสถานศึกษา มอบหมายเฉพาะรายชื่อ แก้ข้อมูลตามสิทธิ์ ลองเปิดข้อมูลนอกสิทธิ์ นำเข้า Excel ข้ามวิทยาลัย ทดสอบอัปโหลด/ดาวน์โหลดไฟล์หนึ่งไฟล์ แล้วถอนสิทธิ์และเข้าสู่ระบบใหม่ ตรวจประวัติผู้ดำเนินการกับเหตุผลทุกครั้ง</p>
+<div class="scroll"><table>
+<tr><th>อาการ</th><th>วิธีตรวจ</th></tr>
+<tr><td>ยังเห็นโหมดสาธิต</td><td>ตรวจ config.js ของเว็บไซต์ที่เปิด รอ Actions สีเขียว แล้ว Ctrl + F5</td></tr>
+<tr><td>ไม่พบ school_assignments หรือ manage_school</td><td>ฐานข้อมูลยังไม่อัปเกรด ตรวจ project ref และ migration หลังอนุมัติ</td></tr>
+<tr><td>แจ้งให้เข้าสู่ระบบใหม่</td><td>อาจเพิ่งเปลี่ยนสิทธิ์ พักบัญชี หรือรีเซ็ตรหัส ให้ออกจากระบบแล้วเข้าใหม่</td></tr>
+<tr><td>ไม่มีปุ่มเพิ่ม/นำเข้า</td><td>ตรวจ create_personnel, personnel_write, import และขอบเขตทั้งสถานศึกษา</td></tr>
+<tr><td>นำเข้าวุฒิ/ใบรับรองไม่ได้</td><td>ตรวจ education_write และ certificates_write ตามสถานศึกษาของแต่ละแถว</td></tr>
+<tr><td>ข้อมูลถูกเปลี่ยนแปลงโดยผู้อื่น</td><td>โหลดข้อมูลใหม่และตรวจรุ่นข้อมูลล่าสุดก่อนแก้อีกครั้ง</td></tr>
+<tr><td>อัปโหลดหรือสร้างบัญชีไม่ได้</td><td>ตรวจ Functions ทั้งสองเป็นรุ่นใหม่ และ Secrets/Origin ตรงเว็บไซต์</td></tr>
+<tr><td>CORS ไม่ผ่าน</td><td>ALLOWED_ORIGINS ต้องมี https://hrvec-adaman2.github.io ไม่มีชื่อ Repository ต่อท้าย</td></tr>
+<tr><td>Bootstrap admin ซ้ำไม่ได้</td><td>ใช้แอดมินเดิม การอัปเกรดไม่ต้องสร้างบัญชีแอดมินอีก</td></tr>
+</table></div>
+<p>การทดสอบบัญชีจริงและ Google Drive ครบวงจรต้องทำหลังติดตั้ง production ชุดทดสอบที่ส่งมอบใช้ข้อมูลสมมติในฐานข้อมูลแยก ไม่สร้างบุคลากรจริงและไม่เปลี่ยนรหัสแอดมิน</p></main></html>

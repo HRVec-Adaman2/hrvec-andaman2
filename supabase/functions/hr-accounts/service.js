@@ -25,7 +25,7 @@ export async function handleAccountAction({admin,createAuthClient,actor,sessionV
  if(!['create','reset_password','set_enabled'].includes(body.action))throw fail('คำสั่งไม่รองรับ');
  if(!uuid(body.personnel_id))throw fail('รายการบุคลากรไม่ถูกต้อง');
  const p=check(await admin.from('personnel').select('id,user_id,school_id,deleted_at,revision').eq('id',body.personnel_id).single(),'ไม่พบข้อมูลบุคลากร',404);
- if(p.deleted_at||!Number.isInteger(p.school_id)||p.school_id<1||p.school_id>7)throw fail('บุคลากรนี้ไม่อยู่ในทะเบียนใช้งาน',409);
+ if(p.deleted_at||!Number.isInteger(p.school_id)||p.school_id<1||p.school_id>2147483647)throw fail('บุคลากรนี้ไม่อยู่ในทะเบียนใช้งาน',409);
  if(body.action==='create'){
   const username=normalizeUsername(body.username);validatePassword(body.password);
   if(username==='admin')throw fail('ชื่อ admin สงวนสำหรับบัญชีผู้ดูแล');
@@ -42,7 +42,7 @@ export async function handleAccountAction({admin,createAuthClient,actor,sessionV
  }
  if(!p.user_id)throw fail('บุคลากรนี้ยังไม่มีบัญชี',409);
  const target=check(await admin.from('profiles').select('*').eq('id',p.user_id).single(),'ไม่พบข้อมูลบัญชี',404);
- if(target.role!=='personnel')throw fail('จัดการบัญชีผู้ดูแลผ่านการเปลี่ยนรหัสของเจ้าของบัญชี',403);
+ if(!['personnel','school_editor'].includes(target.role))throw fail('จัดการบัญชีผู้ดูแลผ่านการเปลี่ยนรหัสของเจ้าของบัญชี',403);
  const expected=revision(body.expected_account_revision);
  if(body.action==='set_enabled'){
   if(typeof body.enabled!=='boolean')throw fail('กรุณาระบุการเปิดหรือพักบัญชี');

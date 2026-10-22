@@ -1,0 +1,19 @@
+import test from 'node:test';import assert from 'node:assert/strict';import vm from 'node:vm';import fs from 'node:fs';
+import {workbookAPI,normalizeXlsx} from '../dist/xlsx-compat.js';import {readImportFile,validateWorkbookImport} from '../dist/importer.js';
+globalThis.window={};vm.runInThisContext(fs.readFileSync('dist/vendor/fflate-0.8.2.min.js','utf8'));window.fflate=globalThis.fflate||window.fflate;vm.runInThisContext(fs.readFileSync('dist/vendor/exceljs-4.4.0.min.js','utf8'));
+const ExcelJS=window.ExcelJS;let saved;const xlsx=workbookAPI(ExcelJS,async(blob,name)=>{saved={blob,name};},window.fflate);
+test('local Excel engine writes and reopens a linked workbook with dynamic schools and multiple certificates',async()=>{
+ const wb=xlsx.utils.book_new();for(const [name,rows]of [['บุคลากร',[['employee_code','full_name','school_id','highest_education','education_majors','phone'],['0001','ทดสอบ Excel',8,'ปริญญาโท','บริหาร; เทคโนโลยี','0812345678']]],['ใบรับรองวิชาชีพ',[['employee_code','kind','name','issuer'],['0001','vocational','ใบที่หนึ่ง','หน่วยงาน ก'],['0001','vocational','ใบที่สอง','หน่วยงาน ข']]],['คำแนะนำ',[['วิธีใช้','หลายใบให้เพิ่มแถว ใช้เลขที่ตำแหน่งเดิม']]]])xlsx.utils.book_append_sheet(wb,xlsx.utils.aoa_to_sheet(rows),name);
+ await xlsx.writeFile(wb,'template.xlsx');assert.equal(saved.name,'template.xlsx');assert.ok(saved.blob.size>1000);
+ const input=await readImportFile({name:'template.xlsx',size:saved.blob.size,arrayBuffer:()=>saved.blob.arrayBuffer()},xlsx);const result=validateWorkbookImport(input,[],[{id:8,name:'วิทยาลัยใหม่',is_active:true}]);assert.deepEqual(result.errors,[]);assert.equal(result.records[0].employee_code,'0001');assert.equal(result.records[0].phone,'0812345678');assert.deepEqual(result.records[0].education_majors,['บริหาร','เทคโนโลยี']);assert.equal(result.certificateCount,2);
+});
+test('the shipped reader rejects formula cells in a real XLSX file',async()=>{
+ const wb=new ExcelJS.Workbook(),sheet=wb.addWorksheet('บุคลากร');sheet.addRow(['employee_code','full_name','school_id']);sheet.addRow(['0001',{formula:'1+1',result:2},8]);const bytes=await wb.xlsx.writeBuffer();await assert.rejects(readImportFile({name:'formula.xlsx',size:bytes.length,arrayBuffer:async()=>bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength)},xlsx),/พบสูตร/);
+});
+test('legacy formatted template remains readable with the shipped local engine',async()=>{
+ const bytes=fs.readFileSync('dist/HRVec-Andaman2-Personnel-Template.xlsx');const input=await readImportFile({name:'template.xlsx',size:bytes.length,arrayBuffer:async()=>bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength)},xlsx);assert.ok(input.matrix[0].includes('เลขที่ตำแหน่ง'));assert.ok(input.certificateMatrix[0].includes('หน่วยงานผู้ออก'));
+});
+
+test('oversized ZIP entries are rejected before allocating their uncompressed size',()=>{
+ const bytes=window.fflate.zipSync({'big.xml':new Uint8Array([1,2,3])});let offset=-1;for(let i=0;i<bytes.length-4;i++)if(bytes[i]===80&&bytes[i+1]===75&&bytes[i+2]===1&&bytes[i+3]===2){offset=i;break;}assert.ok(offset>=0);new DataView(bytes.buffer).setUint32(offset+24,60*1024*1024,true);assert.throws(()=>normalizeXlsx(bytes,window.fflate),/ใหญ่เกินกำหนด/);
+});

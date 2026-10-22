@@ -1,0 +1,22 @@
+HRVec-Andaman2 bundled browser dependencies
+
+ExcelJS 4.4.0
+License: MIT
+Source: https://registry.npmjs.org/exceljs/4.4.0
+File: exceljs-4.4.0.min.js
+SHA256: 7e49da68588e250dbb8bba190d2caa8ab3787cc0284bda1d8b2f805c4df742c9
+See accompanying LICENSE file.
+
+fflate 0.8.2
+License: MIT
+Source: https://registry.npmjs.org/fflate/0.8.2
+File: fflate-0.8.2.min.js
+SHA256: c3b34f2e9f5e74d4d7d64e01cac7a0c01954c6c406414d42185c7b53d6875ddf
+See accompanying LICENSE file.
+
+jsPDF 4.2.1
+License: MIT
+Source: https://cdn.jsdelivr.net/npm/jspdf@4.2.1/dist/jspdf.umd.min.js
+File: jspdf-4.2.1.min.js
+SHA256: e6551fcdc32f09d6853b2c5126d18d01d9447e0da618a41a11ebeee0f6c20d54
+See accompanying LICENSE file.
