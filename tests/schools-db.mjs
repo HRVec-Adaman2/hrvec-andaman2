@@ -2,7 +2,7 @@
 import fs from 'node:fs/promises';import assert from 'node:assert/strict';
 process.on('uncaughtException',e=>{console.error(e.message);console.error(e.stack?.split('\n').slice(-5).join('\n'));process.exit(1);});
 const {PGlite}=await import(process.env.HR_PGLITE_MODULE||'@electric-sql/pglite');
-const root=new URL('../',import.meta.url),schema=await fs.readFile(new URL('supabase/schema.sql',root),'utf8'),migration=await fs.readFile(new URL('supabase/migrations/20261022051533_school_delegation_v18.sql',root),'utf8');
+const root=new URL('../',import.meta.url),schema=await fs.readFile(new URL('supabase/schema.sql',root),'utf8'),migration=await fs.readFile(new URL('supabase/migrations/20261022083857_school_delegation_v18.sql',root),'utf8');
 const db=new PGlite();let checks=0;
 const ok=(v,m)=>{assert.ok(v,m);checks++;},eq=(a,b)=>{assert.deepEqual(a,b);checks++;},deny=async(p,match)=>{await assert.rejects(p,match);checks++;};
 const admin='00000000-0000-0000-0000-000000000001',editor='00000000-0000-0000-0000-000000000002',staff='00000000-0000-0000-0000-000000000003',outsider='00000000-0000-0000-0000-000000000004';

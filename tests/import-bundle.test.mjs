@@ -35,3 +35,10 @@ test('formula checks cover the certificate worksheet and ignore example workshee
  await assert.rejects(readImportFile(file,engine),/พบสูตรใน ใบรับรองวิชาชีพ!G2/);
  delete sheets.ใบรับรองวิชาชีพ.G2;const read=await readImportFile(file,engine);assert.equal(read.certificateMatrix,main);
 });
+
+test('version 1.8 Thai headings map to current personnel and competency fields without losing identifiers',()=>{
+ const matrix=[['รหัสบุคลากร','ชื่อ – นามสกุล','สถานศึกษา (กรอกตามรหัสอ้างอิง)','ตำแหน่ง','ฝ่าย','งาน/แผนก/กลุ่มงาน','วิทยฐานะ','วันเกิด','วันเริ่มรับราชการ','email','โทรศัพท์','วุฒิการศึกษาสูงสุด','สาขาวิชาของวุฒิสูงสุด'],['000123','บุคลากร ทดสอบ',1,'ผู้อำนวยการ','','งานบริหารบุคลากร','ไม่มีวิทยฐานะ','1980-05-15','2005-05-01','example@example.org','0812345678','ปริญญาโท','การบริหาร; เทคโนโลยี']];
+ const certs=[['รหัสบุคลากร','ประเภทใบรับรองวิชาชีพ','ชื่อใบรับรองวิชาชีพ','หน่วยงานที่ออกให้','เลขที่','วันที่ออก','วันหมดอายุ','สาขาอาชีพ','ระดับสมรรถนะ','มาตรฐานอ้างอิง'],['000123','ใบรับรองสมรรถนะทางวิชาชีพ','คุณวุฒิวิชาชีพ','หน่วยงานทดสอบ','00001','2025-01-01','','เทคโนโลยีสารสนเทศ','ระดับ 4','มาตรฐานอาชีพ'],['000123','vocational','ทักษะเพิ่มเติม','หน่วยงานทดสอบ','00002','','','','','']];
+ const r=validateWorkbookImport({matrix,certificateMatrix:certs},[],schools),p=r.records[0];
+ assert.deepEqual(r.errors,[]);assert.equal(p.employee_code,'000123');assert.equal(p.phone,'0812345678');assert.equal(p.department,'');assert.equal(p.work_unit,'งานบริหารบุคลากร');assert.equal(p.start_date,'2005-05-01');assert.equal(p.education_majors.length,2);assert.equal(r.certificateCount,2);assert.equal(p.certificates[0].number,'00001');assert.equal(p.certificates[0].competency_level,'ระดับ 4');assert.equal(p.certificates[0].standard,'มาตรฐานอาชีพ');assert.equal(r.warnings.length,2);
+});

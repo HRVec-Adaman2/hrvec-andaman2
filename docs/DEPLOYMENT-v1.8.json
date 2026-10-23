@@ -1,0 +1,74 @@
+{
+  "release": "1.8.0",
+  "checked_on": "2026-10-22",
+  "project_id": "oftlfxiywhtoftxluviv",
+  "backend_source_commit": "c2ac532c8d2cfbc6e5cb0d87cb55391577e10a3a",
+  "database": {
+    "version": "1.8.0",
+    "migration_version": "20261022083857",
+    "migration_name": "school_delegation_v18",
+    "migration_file": "supabase/migrations/20261022083857_school_delegation_v18.sql",
+    "existing_data_retained": true,
+    "counts_before_and_after": {
+      "schools": 7,
+      "profiles": 2,
+      "personnel": 0,
+      "documents": 0,
+      "certificates": 0
+    },
+    "new_assignments": 0,
+    "rls_enabled_on_both_new_tables": true
+  },
+  "functions": [
+    {
+      "name": "hr-bridge",
+      "status": "ACTIVE",
+      "deployment_version": 5,
+      "verify_jwt": false,
+      "ezbr_sha256": "753ed96b0425d9a7ed5b4c7d44cb590687b4b57ba5016095389c1645bc635c56"
+    },
+    {
+      "name": "hr-accounts",
+      "status": "ACTIVE",
+      "deployment_version": 5,
+      "verify_jwt": false,
+      "ezbr_sha256": "d45cafaea5c15288539bbd820ee4e4e10ee3815344e897337bb3f5855bcb8247"
+    }
+  ],
+  "validation": {
+    "unit_tests_prepared_release": 87,
+    "unit_test_timezones": [
+      "Asia/Bangkok",
+      "UTC"
+    ],
+    "isolated_postgres_assertions": 76,
+    "live_http_checks_passed": 14,
+    "live_rollback_guards_passed": 4,
+    "new_public_wrappers_invoker_with_fixed_path": 3,
+    "anonymous_school_rpc_and_assignments_denied": true,
+    "direct_authenticated_school_and_assignment_writes_denied": true
+  },
+  "security_advisories": {
+    "existing_public_security_definer_functions": 9,
+    "leaked_password_protection_enabled": false,
+    "remediation_urls": [
+      "https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable",
+      "https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection"
+    ]
+  },
+  "performance_advisories": {
+    "unindexed_foreign_keys": 5,
+    "rls_auth_initplan": 3,
+    "unused_indexes": 7
+  },
+  "pending": [
+    "Update user GitHub Pages frontend from supplied v1.8 source",
+    "Update original Apps Script Code.gs and deployment",
+    "Sign in with real accounts and test authorized file upload/download",
+    "Assign real school duties through admin UI"
+  ],
+  "site_mode": "demo_only",
+  "real_passwords_changed": false,
+  "real_assignments_created": false,
+  "authenticated_google_drive_end_to_end_tested": false
+}

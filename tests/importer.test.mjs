@@ -33,3 +33,16 @@ test('workbook import chooses data sheet and refuses formulas',async()=>{
 });
 
 test('Excel local midnight preserves its calendar date across time zones',()=>assert.equal(normalizedDate(new Date(1980,4,15)),'1980-05-15'));
+
+test('copied Thai headers tolerate a BOM, invisible spacing, dash variants and slash spacing',()=>{
+ const r=validateImport([['\ufeffเลขที่ตำแหน่ง','ชื่อ\u00a0 – \u00a0นามสกุล','หน่วยงาน / สถานศึกษา','วันบรรจุ / เริ่มงาน','วิทยฐานะ\u200b'],['0001','ทดสอบ การคัดลอก',1,'2005-01-01','ไม่มีวิทยฐานะ']],[],schools);
+ assert.deepEqual(r.errors,[]);assert.equal(r.records[0].full_name,'ทดสอบ การคัดลอก');assert.equal(r.records[0].start_date,'2005-01-01');assert.ok(r.warnings.length);
+});
+test('aliases cannot overwrite duplicate columns or treat a certificate number as a personnel identifier',()=>{
+ const duplicate=validateImport([['employee_code','เลขที่ตำแหน่ง','ชื่อ-นามสกุล','สถานศึกษา'],['001','002','ทดสอบ',1]],[],schools);assert.match(duplicate.errors.join(' '),/หัวคอลัมน์ซ้ำ/);assert.equal(duplicate.records.length,0);
+ const ambiguous=validateImport([['เลขที่','ชื่อ-นามสกุล','สถานศึกษา'],['001','ทดสอบ',1]],[],schools);assert.match(ambiguous.errors.join(' '),/ขาดคอลัมน์ เลขที่ตำแหน่ง/);assert.equal(ambiguous.records.length,0);
+});
+test('retired address columns and unlabeled interior columns explain how to repair the file',()=>{
+ const address=validateImport([['เลขที่ตำแหน่ง','ชื่อ-นามสกุล','สถานศึกษา','ที่อยู่ตัวอย่าง'],['001','ทดสอบ',1,'']],[],schools);assert.match(address.errors.join(' '),/ลบทั้งคอลัมน์ที่อยู่/);assert.equal(address.records.length,0);
+ const blank=validateImport([['เลขที่ตำแหน่ง','','ชื่อ-นามสกุล','สถานศึกษา'],['001','','ทดสอบ',1]],[],schools);assert.match(blank.errors.join(' '),/หัวตารางว่างที่คอลัมน์ 2/);assert.equal(blank.records.length,0);
+});

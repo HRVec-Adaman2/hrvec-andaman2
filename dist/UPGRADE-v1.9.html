@@ -1,0 +1,287 @@
+<!doctype html><html lang="th"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>คู่มือ HRVec-Andaman2 รุ่น 1.9</title><style>body{font:16px/1.85 Tahoma,sans-serif;color:#203b59;background:#f4f7fd;max-width:1050px;margin:auto;padding:40px}main{padding:42px;background:white;border:1px solid #dce7f5;border-radius:20px}h1,h2,h3{color:#315b91;line-height:1.45}h1{font-size:28px}h2{margin-top:36px;font-size:21px;border-bottom:1px solid #dce7f5;padding-bottom:10px}a{color:#255bb0;overflow-wrap:anywhere}table{border-collapse:collapse;width:100%;margin:15px 0}th,td{border:1px solid #dce7f5;padding:12px;text-align:left;vertical-align:top}th{background:#edf3ff}pre{padding:18px;background:#f0f5fc;border:1px solid #dce7f5;border-radius:12px;overflow:auto}code{font-size:13px}p,li{overflow-wrap:anywhere}img{max-width:100%;height:auto;border:1px solid #dce7f5;border-radius:14px}.scroll{overflow:auto}@media(max-width:640px){body{padding:12px}main{padding:20px}h1{font-size:23px}th,td{padding:9px}}@media print{body{padding:0;background:white}main{padding:0;border:0}pre{white-space:pre-wrap}img{max-height:230mm;object-fit:contain}h2{break-after:avoid}tr{break-inside:avoid}}</style><main><h1>HRVec-Andaman2 รุ่น 1.9 — คู่มือนำไปใช้งานจริง</h1>
+<p>จัดทำ 22 ตุลาคม 2569 สำหรับสถาบันการอาชีวศึกษาภาคใต้ 2 และสถานศึกษาในสังกัด</p>
+<h2>1. สิ่งที่ปรับแล้วและสถานะที่ตรวจจริง</h2>
+<div class="scroll"><table>
+<tr><th>รายการ</th><th>ผลดำเนินการ</th></tr>
+<tr><td>ฐานข้อมูลโครงการ HR</td><td>อัปเกรดเป็น 1.9.0 แล้ว ในโครงการ oftlfxiywhtoftxluviv</td></tr>
+<tr><td>โครงสร้างหน่วยงาน</td><td>ส่วนกลางสถาบัน 1 หน่วยงาน และวิทยาลัย 7 แห่ง รวม 8 หน่วยงาน</td></tr>
+<tr><td>ส่วนราชการสถาบัน</td><td>เพิ่ม 5 ส่วนราชการตามแผนผังที่สถาบันเผยแพร่</td></tr>
+<tr><td>ฝ่ายสถานศึกษา</td><td>ปรับรายการตั้งต้นเป็น 4 ฝ่ายตามโครงสร้าง 2569</td></tr>
+<tr><td>ที่อยู่บุคลากร</td><td>ตัดจากฟอร์ม ฐานข้อมูลปัจจุบัน ประวัติที่ระบบแสดง และแม่แบบนำเข้า</td></tr>
+<tr><td>ใบรับรองสมรรถนะ</td><td>เพิ่มประเภท competency พร้อมสาขาอาชีพ ระดับสมรรถนะ และมาตรฐานอ้างอิง</td></tr>
+<tr><td>ข้อมูลจริงก่อนอัปเกรด</td><td>พบทะเบียนบุคลากร 0 คน และที่อยู่ที่กรอกไว้ 0 รายการ บัญชีเดิมไม่ได้เปลี่ยนรหัส</td></tr>
+<tr><td>Edge Functions</td><td>hr-bridge และ hr-accounts เป็น ACTIVE ทั้งสองรายการ โค้ดเดิมรองรับหน่วยงานที่เพิ่มแล้ว ไม่ต้อง Deploy ซ้ำเพื่อใช้ฟิลด์ใหม่</td></tr>
+<tr><td>หน้าเว็บ GitHub Pages</td><td>ต้องนำชุด Source รุ่น 1.9 ไปแทนไฟล์เดิมและ Commit → Sync Changes ด้วยขั้นตอนที่ 3</td></tr>
+<tr><td>เว็บที่ส่งมอบ</td><td>https://hr-andaman2.muangyor.chatgpt.site เชื่อมโครงการ HR จริง ใช้บัญชีเดิมและสิทธิ์ของระบบ</td></tr>
+</table></div>
+<p>ข้อมูลตรวจยืนยันฐานข้อมูล: <code>hr_schema_version() = 1.9.0</code>; จำนวนหน่วยงาน 8; ส่วนกลาง 1; คอลัมน์ address ไม่มีแล้ว; ใบรับรองมี occupation, competency_level และ standard</p>
+<p>Migration ที่ใช้จริงคือ <code>supabase/migrations/20261022111900_institute_structure_v19.sql</code> ชื่อและเลขตรงกับประวัติฐานข้อมูลโครงการ HR</p>
+<p><strong>โครงการนี้อัปเกรดฐานข้อมูลให้แล้ว ให้เริ่มอัปเดตหน้าเว็บตามขั้นตอนที่ 3 ไม่ต้องรัน SQL ซ้ำ ไม่สร้าง admin ใหม่ และไม่ใช้รหัสเริ่มต้นทับบัญชีเดิม</strong></p>
+<h2>2. ใช้โปรแกรมอะไร เปิดตรงไหน</h2>
+<div class="scroll"><table>
+<tr><th>งาน</th><th>โปรแกรม</th><th>วิธีเปิด</th></tr>
+<tr><td>แตก ZIP</td><td>File Explorer ของ Windows</td><td>คลิกขวา ZIP → Extract All → Extract</td></tr>
+<tr><td>แก้ไขโค้ดและส่งขึ้น GitHub</td><td>Visual Studio Code</td><td>File → Open Folder → เลือกโฟลเดอร์โครงการเดิม</td></tr>
+<tr><td>ตรวจสถานะเว็บไซต์</td><td>Chrome หรือ Edge</td><td>เปิด GitHub → Repository → Actions</td></tr>
+<tr><td>ตรวจฐานข้อมูล</td><td>Chrome หรือ Edge</td><td>Supabase Dashboard → โครงการ HR → SQL Editor</td></tr>
+<tr><td>รันคำสั่ง</td><td>Terminal ใน VS Code</td><td>เมนูด้านบน Terminal → New Terminal; หากเมนูซ่อนอยู่กด … หรือ Ctrl + Shift + `</td></tr>
+<tr><td>กรอก Excel</td><td>Microsoft Excel</td><td>เปิดไฟล์แม่แบบ .xlsx โดยตรง ไม่ต้องแปลงเป็น CSV</td></tr>
+<tr><td>แก้โค้ด Google Drive / Sheets</td><td>Chrome หรือ Edge</td><td>เปิด https://script.google.com แล้วเลือกโครงการ Apps Script เดิม</td></tr>
+</table></div>
+<p>ชุด Source ต้องมี package.json, dist, supabase, apps-script, scripts, tests, docs, deployment และ .github ที่ระดับเดียวกัน อย่านำ ZIP ขึ้น Repository เป็นไฟล์เดียว และอย่าวางทั้งชุดในโฟลเดอร์ซ้อนเพิ่มอีกชั้น</p>
+<h2>3. อัปเดตหน้าเว็บของโครงการ HR ที่ใช้อยู่</h2>
+<h3>3.1 เตรียมไฟล์บน Windows</h3>
+<ol>
+<li>ดาวน์โหลด HRVec-Andaman2-v1.9-GitHub-Source.zip แล้วแตกไฟล์</li>
+<li>เปิดโฟลเดอร์โครงการเดิมที่เชื่อมกับ GitHub ใน VS Code ผ่าน File → Open Folder</li>
+<li>สำรองโฟลเดอร์โครงการเดิมก่อนแทนไฟล์ โดยเฉพาะไฟล์ .env และ .env.bootstrap ให้เก็บเฉพาะเครื่องผู้ติดตั้ง</li>
+<li>คัดลอกไฟล์และโฟลเดอร์จาก ZIP รุ่น 1.9 ลงในโฟลเดอร์โครงการเดิม เมื่อ Windows ถามให้เลือก Replace the files in the destination</li>
+<li>เก็บโฟลเดอร์ .git เดิมไว้เพื่อรักษาการเชื่อมต่อ GitHub ไม่ลบ .git และไม่สร้าง Repository ใหม่</li>
+<li>เปิด View → Show → Hidden items ใน File Explorer เพื่อให้เห็น .github และ .gitignore</li>
+<li>ตรวจว่ามีไฟล์ .github/workflows/pages.yml; ไฟล์นี้อยู่ในชุด Source และใช้เผยแพร่หน้าเว็บ</li>
+</ol>
+<h3>3.2 ตรวจการเชื่อมต่อหน้าเว็บ</h3>
+<p>เปิด dist/config.js ใน VS Code ต้องมีรูปแบบดังนี้ โดยใช้ Publishable key ของโครงการ HR:</p>
+<pre><code>window.HR_CONFIG = {
+  supabaseUrl: &quot;https://oftlfxiywhtoftxluviv.supabase.co&quot;,
+  supabaseAnonKey: &quot;PUBLISHABLE_KEY_ของโครงการ_HR&quot;
+};</code></pre>
+<p><strong>ZIP ชื่อ GitHub-Source ที่ส่งให้ใส่ค่าจริงที่เป็นค่าสาธารณะของโครงการ HR ไว้ใน dist/config.js แล้ว</strong> จึงไม่ต้องสร้าง Key ใหม่ หากใช้ไฟล์จากแหล่งอื่นให้คัดลอก deployment/config.production.js ไปแทน dist/config.js</p>
+<p>หา Publishable key ได้ที่ Supabase → โครงการ HR → Settings → API Keys → Publishable key ชื่อ default ห้ามใช้ service_role หรือ Secret key ใน dist/config.js</p>
+<p>หน้าเว็บที่ส่งมอบตั้งค่า dist/config.js เชื่อมโครงการ HR จริงแล้ว ZIP สำหรับอัปเดตเว้นไฟล์นี้ไว้เพื่อรักษาค่าการเชื่อมต่อเดิมของคุณ</p>
+<h3>3.3 ตรวจไฟล์ก่อนส่ง</h3>
+<p>ใน VS Code เลือก Terminal → New Terminal หากเปิดเป็น PowerShell ใช้คำสั่งที่ลงท้าย .cmd ตามตัวอย่าง หรือกดลูกศรข้างเครื่องหมาย + ในแถบ Terminal → Select Default Profile → Command Prompt แล้วเปิด Terminal ใหม่</p>
+<pre><code>node --version
+npm.cmd run check
+npm.cmd test</code></pre>
+<p>ผลที่ควรได้: ตรวจไวยากรณ์ผ่าน และการทดสอบ 100 รายการผ่าน หากไม่รู้จัก node ให้ติดตั้ง Node.js รุ่น LTS จาก https://nodejs.org แล้วปิด–เปิด VS Code ใหม่</p>
+<h3>3.4 Commit และ Sync Changes</h3>
+<ol>
+<li>กดไอคอน Source Control ทางซ้ายของ VS Code หรือ Ctrl + Shift + G</li>
+<li>ตรวจรายการ Changes ว่ามีไฟล์ app.js, api.js, structure.js, template.js และไฟล์ฐานข้อมูลรุ่น 1.9</li>
+<li>ตรวจว่าไม่มี .env, .env.bootstrap, รหัสผ่าน, service_role key, ไฟล์ Excel ข้อมูลบุคลากรจริง หรือสำเนาสำรองข้อมูลจริงอยู่ใน Changes</li>
+<li>กด + เพื่อ Stage เฉพาะไฟล์โค้ดและแม่แบบเปล่า</li>
+<li>ใส่ข้อความ Commit เช่น Upgrade HRVec-Andaman2 to v1.9 แล้วกด Commit</li>
+<li>กด Sync Changes หรือ Push เพื่อส่งไป GitHub หากมีคำขอเข้าสู่ระบบ ให้ใช้บัญชีเจ้าของ Repository เดิม</li>
+<li>ถ้าโปรแกรมแจ้งว่ามีไฟล์แก้ไขทั้งสองฝั่ง ให้ตรวจ Merge Conflicts ก่อนกด Sync อีกครั้ง ไม่เลือกเขียนทับไฟล์ลับหรือข้อมูลจริงโดยไม่ตรวจ</li>
+</ol>
+<h3>3.5 รอ GitHub Actions และเปิดเว็บ</h3>
+<p>เปิด Chrome หรือ Edge ไปที่ https://github.com/HRVec-Adaman2/hrvec-andaman2</p>
+<ol>
+<li>เลือก Settings → Pages → Build and deployment → Source = GitHub Actions</li>
+<li>เปิดแท็บ Actions แล้วเลือก Deploy HRVec-Andaman2 to GitHub Pages</li>
+<li>Workflow เริ่มอัตโนมัติหลัง Push ไป main หรือกด Run workflow → main → Run workflow</li>
+<li>รอให้การทดสอบและ Deploy เป็นเครื่องหมายถูกสีเขียว</li>
+<li>กลับ Settings → Pages → Visit site หรือเปิด https://hrvec-adaman2.github.io/hrvec-andaman2/</li>
+<li>กด Ctrl + Shift + R เพื่อโหลดไฟล์รุ่นล่าสุด ต้องเห็นข้อความท้ายหน้า “รุ่น 1.9”</li>
+<li>เลือกเข้าสู่ระบบจริง ใช้บัญชีและรหัสผ่านแอดมินปัจจุบัน ระบบนี้ไม่ได้รีเซ็ตรหัสเดิม</li>
+<li>หลังเข้าสู่ระบบ เปิดข้อมูลบุคลากร → เพิ่มบุคลากร แล้วตรวจว่ามี “สถาบันการอาชีวศึกษาภาคใต้ 2” ในตัวเลือกหน่วยงาน</li>
+</ol>
+<p>ชื่อบัญชี GitHub ใน URL นี้คือ HRVec-Adaman2 ส่วนชื่อ Repository คือ hrvec-andaman2 การสะกดต่างกัน ให้ใช้ URL ตามที่ระบุ</p>
+<p>หากยังไม่เห็น Workflow ให้ตรวจว่า .github/workflows/pages.yml อยู่บน Branch main และ Repository ไม่ได้มีโฟลเดอร์ครอบโค้ดเพิ่มอีกชั้น</p>
+<h2>4. ตรวจฐานข้อมูลที่อัปเกรดให้แล้ว</h2>
+<p>ใช้ Chrome หรือ Edge เปิด https://supabase.com/dashboard/project/oftlfxiywhtoftxluviv แล้วเลือก SQL Editor → New query วางคำสั่งตรวจต่อไปนี้แล้วกด Run:</p>
+<pre><code>select public.hr_schema_version();
+select id, name, unit_type, is_active
+from public.schools
+order by id;
+select column_name
+from information_schema.columns
+where table_schema=&#x27;public&#x27; and table_name=&#x27;personnel&#x27;
+  and column_name=&#x27;address&#x27;;</code></pre>
+<p>ผลที่ควรได้ตามลำดับ: 1.9.0; รายการ 8 หน่วยงาน; และคำสั่งสุดท้ายไม่พบแถว ในโครงการ HR นี้ส่วนกลางเป็นรหัส 8 แต่โค้ดไม่ล็อกรหัส 8 เพื่อรองรับโครงการอื่นที่ใช้เลขนี้ไปแล้ว แม่แบบที่ดาวน์โหลดจากระบบใช้รายการปัจจุบันเสมอ</p>
+<p>หากติดตั้งให้โครงการอื่นที่เป็นรุ่น 1.8 ให้เปิดไฟล์ migration รุ่น 1.9 ใน VS Code คัดลอก SQL ทั้งไฟล์ไป SQL Editor ของโครงการเป้าหมายหลังสำรองข้อมูล แล้ว Run เพียงไฟล์นี้ ฐานข้อมูลที่มีข้อมูลแล้วห้ามรัน supabase/schema.sql ทับ</p>
+<p>ถ้าพบข้อความ “พบที่อยู่เดิม” การอัปเกรดจะหยุดและย้อนกลับทั้งชุด ต้องให้ผู้รับผิดชอบสำรองและจัดการข้อมูลที่อยู่เดิมตามข้อกำหนดของหน่วยงานก่อน ไม่แก้ SQL เพื่อลบการตรวจนี้โดยไม่ตรวจข้อมูล</p>
+<p>ไฟล์ schema.sql ใช้เฉพาะโครงการใหม่ที่ตาราง public ของแอปยังว่าง ไม่ใช้เป็นคำสั่งอัปเกรดจากรุ่นเก่า ห้ามนำ migration รุ่น 1.7 หรือ 1.8 มารันย้อนหลังหลังใช้รุ่น 1.9</p>
+<h2>5. โครงสร้างข้อมูลหน่วยงานและฝ่าย</h2>
+<p>เลือกหน่วยงานหลักก่อน แล้วฟอร์มจะแสดงรายการฝ่าย/ส่วนราชการตามประเภทหน่วยงาน</p>
+<div class="scroll"><table>
+<tr><th>ประเภท</th><th>รายการตั้งต้น</th></tr>
+<tr><td>ส่วนกลางสถาบัน</td><td>สำนักงานผู้อำนวยการสถาบัน</td></tr>
+<tr><td>ส่วนกลางสถาบัน</td><td>สำนักพัฒนายุทธศาสตร์และความร่วมมืออาชีวศึกษา</td></tr>
+<tr><td>ส่วนกลางสถาบัน</td><td>สำนักพัฒนากิจการนักศึกษาและกิจการพิเศษ</td></tr>
+<tr><td>ส่วนกลางสถาบัน</td><td>ศูนย์วิจัยและพัฒนาการอาชีวศึกษา</td></tr>
+<tr><td>ส่วนกลางสถาบัน</td><td>อาชีวศึกษาบัณฑิต</td></tr>
+<tr><td>สถานศึกษา</td><td>ฝ่ายบริหารทรัพยากร</td></tr>
+<tr><td>สถานศึกษา</td><td>ฝ่ายยุทธศาสตร์และแผนงาน</td></tr>
+<tr><td>สถานศึกษา</td><td>ฝ่ายกิจการนักเรียน นักศึกษา</td></tr>
+<tr><td>สถานศึกษา</td><td>ฝ่ายวิชาการ</td></tr>
+</table></div>
+<p>“งาน/แผนก/กลุ่มงาน” เป็นช่องเพิ่มเติม เช่น งานบริหารและพัฒนาทรัพยากรบุคคล หรือแผนกวิชาที่รับผิดชอบ ให้กรอกตามคำสั่งมอบหมายงานจริง ผู้เป็นผู้อำนวยการสามารถเว้นฝ่าย/ส่วนราชการว่างได้ ไม่มีช่องสถานะในฟอร์มกรอกบุคลากรใหม่</p>
+<p>ชื่อฝ่ายเดิมที่ระบบรู้จัก เช่น แผนงานและความร่วมมือ ปรับเป็นฝ่ายยุทธศาสตร์และแผนงาน และพัฒนากิจการนักเรียนปรับเป็นฝ่ายกิจการนักเรียน นักศึกษา โดยเก็บประวัติก่อนและหลังเปลี่ยนชื่อไว้</p>
+<p>หากมีส่วนราชการที่ตั้งเพิ่มตามคำสั่ง ให้ admin เปิดตั้งค่าระบบ → ตำแหน่ง สถานะ ฝ่าย และวิทยฐานะ → เพิ่มรายการ → เลือก “ส่วนราชการสถาบัน” หรือ “ฝ่ายสถานศึกษา (2569)” ให้ถูกประเภท แล้วเพิ่มชื่อรายการ เมื่อกลับไปกรอกบุคลากรจะพบรายการใหม่ อย่าเลือกหมวดฝ่ายวิทยาลัยแทนส่วนราชการสถาบัน</p>
+<p>แหล่งโครงสร้างที่ใช้ตรวจสอบ: https://veis2.ac.th/government_structure/ และระเบียบบริหารสถานศึกษา 2569 ซึ่งหน่วยศึกษานิเทศก์ สอศ. เผยแพร่ประกอบที่ https://dles.vec.go.th/blog/47 รายละเอียดงานย่อยให้ใช้ตามคำสั่งของหน่วยงานที่มีผลใช้งาน</p>
+<h2>6. รูปแบบการกรอกที่เสนอและทำไว้ในระบบ</h2>
+<h3>6.1 กรอกปกติ</h3>
+<ol>
+<li>เข้าสู่ระบบ → ข้อมูลบุคลากร → เพิ่มบุคลากร</li>
+<li>ส่วนที่ 1 กรอกเลขที่ตำแหน่ง ชื่อ หน่วยงาน ตำแหน่ง ฝ่าย/ส่วนราชการ และงาน/แผนก/กลุ่มงาน</li>
+<li>ส่วนที่ 2 กรอกวุฒิสูงสุดและสาขาวิชา ถ้ามีหลายสาขากด เพิ่มสาขาวิชา ทีละรายการ สูงสุด 20 สาขาของวุฒิสูงสุด</li>
+<li>ส่วนที่ 3 กรอกอีเมล โทรศัพท์ และรูปโปรไฟล์ ไม่มีช่องที่อยู่</li>
+<li>ส่วนที่ 4 เลือก เพิ่มข้อมูลใบรับรองวิชาชีพพร้อมบุคลากร หากมีใบรับรองที่ต้องเพิ่มทันที</li>
+<li>กด ตรวจสอบก่อนบันทึก ตรวจชื่อบุคคล หน่วยงาน ฝ่าย และใบรับรอง แล้วทำเครื่องหมายยืนยันก่อนบันทึก</li>
+<li>หากมีใบอื่น เปิดแฟ้มบุคลากร → เพิ่มใบรับรอง เพิ่มได้ทีละใบโดยไม่สร้างบุคลากรซ้ำ</li>
+</ol>
+<h3>6.2 ใบรับรองสมรรถนะทางวิชาชีพ</h3>
+<p>เลือกประเภท “ใบรับรองสมรรถนะทางวิชาชีพ” แล้วกรอก:</p>
+<div class="scroll"><table>
+<tr><th>ข้อมูล</th><th>วิธีกรอก</th></tr>
+<tr><td>ชื่อใบรับรอง</td><td>ชื่อจริงตามหลักฐาน ต้องกรอก</td></tr>
+<tr><td>หน่วยงานผู้ออก</td><td>ผู้ออกใบรับรองตามหลักฐาน ต้องกรอก</td></tr>
+<tr><td>สาขาอาชีพ</td><td>เช่น เทคโนโลยีสารสนเทศ ให้ใช้ชื่อบนใบรับรอง</td></tr>
+<tr><td>ระดับสมรรถนะ</td><td>เช่น ระดับ 4 กรอกตามหลักฐาน ไม่ใช่ระดับวุฒิการศึกษา</td></tr>
+<tr><td>มาตรฐานอ้างอิง</td><td>ชื่อมาตรฐานตามเอกสาร ถ้าไม่มีเว้นว่าง</td></tr>
+<tr><td>เลขที่ใบรับรอง</td><td>ตั้งเป็นข้อความเพื่อคงเลขศูนย์นำหน้า</td></tr>
+<tr><td>วันที่ออก / หมดอายุ</td><td>กรอกตามเอกสาร ไม่มีวันหมดอายุให้เว้นว่าง</td></tr>
+<tr><td>ไฟล์หลักฐาน</td><td>อัปโหลดผ่านแฟ้มเอกสารก่อน แล้วเลือกเชื่อมกับใบรับรองของบุคคลเดียวกัน</td></tr>
+</table></div>
+<p>กรณีอัปโหลดหลักฐาน เลือกประเภทเอกสารตามข้อกำหนดที่หน่วยงานใช้ เช่น วุฒิบัตรอบรม / เกียรติบัตร แล้วเชื่อมจากฟอร์มใบรับรอง การเพิ่มข้อมูลใบรับรองยังต้องอัปโหลดไฟล์หลักฐานแยกเพื่อให้ระบบตรวจเอกสารได้</p>
+<p>ใบประกอบวิชาชีพครู ใบประกอบวิชาชีพผู้บริหาร และใบรับรองทักษะวิชาชีพเดิมยังแยกประเภทไว้ ระบบไม่เปลี่ยนใบเดิมให้เป็นสมรรถนะอัตโนมัติ</p>
+<h3>6.3 ค้นหาและติดตาม</h3>
+<p>หน้าภาพรวมมีแถบ “ใบรับรองสมรรถนะทางวิชาชีพ” กดเพื่อเปิดรายการประเภทนี้ และกดแถวส่วนกลางหรือวิทยาลัยเพื่อดูรายชื่อเฉพาะหน่วยงานได้ ระบบยังตรวจสิทธิ์ก่อนเปิดรายละเอียด</p>
+<p>ในหน้าใบรับรอง ค้นได้จากชื่อบุคลากร เลขที่ตำแหน่ง ชื่อใบรับรอง ผู้ออก สาขาอาชีพ ระดับ และมาตรฐาน รายงานใบอนุญาตและใบรับรองส่งออกช่องสมรรถนะใหม่ได้ทั้ง CSV/Excel</p>
+<h2>7. ใช้ Excel นำเข้าครั้งแรกพร้อมใบรับรองหลายใบ</h2>
+<p>ใช้ Microsoft Excel เปิดแม่แบบ .xlsx ที่ดาวน์โหลดจากเว็บ แม่แบบมี 6 ชีตและใช้หัวตารางภาษาไทย:</p>
+<div class="scroll"><table>
+<tr><th>ชีต</th><th>ใช้ทำอะไร</th></tr>
+<tr><td>บุคลากร</td><td>กรอกหนึ่งคนต่อหนึ่งแถว เริ่มแถว 2</td></tr>
+<tr><td>ใบรับรองวิชาชีพ</td><td>กรอกหนึ่งใบต่อหนึ่งแถว อ้างเลขที่ตำแหน่งของคนในชีตแรก</td></tr>
+<tr><td>รายการอ้างอิง</td><td>เลือกชื่อหน่วยงาน ฝ่าย ประเภทใบรับรอง ตำแหน่ง และวิทยฐานะ</td></tr>
+<tr><td>ตัวอย่าง</td><td>ข้อมูลสมมติสำหรับดูวิธีกรอก ระบบไม่นำเข้าชีตนี้</td></tr>
+<tr><td>ตัวอย่างใบรับรอง</td><td>ตัวอย่างหนึ่งคนมีหลายใบ ระบบไม่นำเข้าชีตนี้</td></tr>
+<tr><td>คำแนะนำ</td><td>วิธีกรอก ช่องที่ต้องกรอก ข้อจำกัดและรูปแบบวันที่</td></tr>
+</table></div>
+<p>ลำดับชีตอาจต่างกัน ให้กรอกเฉพาะชีต บุคลากร และ ใบรับรองวิชาชีพ หัวตารางสองชีตนี้ตรงกับตัวนำเข้า และไฟล์ที่ดาวน์โหลดจากเว็บจะแสดงหน่วยงานตามสิทธิ์ปัจจุบัน</p>
+<p>บุคลากรมี 13 คอลัมน์: เลขที่ตำแหน่ง, ชื่อ-นามสกุล, หน่วยงาน/สถานศึกษา, ตำแหน่ง, ฝ่าย/ส่วนราชการ, งาน/แผนก/กลุ่มงาน, วิทยฐานะ, วันเกิด, วันเริ่มงาน, อีเมล, โทรศัพท์, วุฒิการศึกษาสูงสุด, สาขาวิชา</p>
+<p>ใบรับรองมี 10 คอลัมน์: เลขที่ตำแหน่ง, ประเภทใบรับรอง, ชื่อใบรับรองวิชาชีพ, หน่วยงานผู้ออก, เลขที่ใบรับรอง, วันที่ออก, วันหมดอายุ, สาขาอาชีพ, ระดับสมรรถนะ, มาตรฐานอ้างอิง</p>
+<p>ตัวอย่างบุคลากรที่มีใบรับรอง 2 ใบ:</p>
+<div class="scroll"><table>
+<tr><th>ชีตบุคลากร</th><th>เลขที่ตำแหน่ง</th><th>ชื่อ</th></tr>
+<tr><td>แถว 2</td><td>000123</td><td>บุคลากร ตัวอย่าง</td></tr>
+</table></div>
+<div class="scroll"><table>
+<tr><th>ชีตใบรับรองวิชาชีพ</th><th>เลขที่ตำแหน่ง</th><th>ชื่อใบรับรอง</th><th>ประเภท</th></tr>
+<tr><td>แถว 2</td><td>000123</td><td>ใบรับรองใบที่ 1</td><td>ใบรับรองสมรรถนะทางวิชาชีพ</td></tr>
+<tr><td>แถว 3</td><td>000123</td><td>ใบรับรองใบที่ 2</td><td>ใบรับรองสมรรถนะทางวิชาชีพ</td></tr>
+</table></div>
+<p><strong>หลายใบให้เพิ่มแถว ใช้เลขที่ตำแหน่งเดิม ไม่เพิ่มคอลัมน์ และไม่เพิ่มบุคลากรคนเดิมซ้ำในชีตบุคลากร</strong> ข้อมูลทั้งสองชีตจะบันทึกพร้อมกัน ถ้ามีข้อผิดพลาดระบบไม่บันทึกชุดนั้น</p>
+<ol>
+<li>คงชื่อชีตและหัวตารางภาษาไทย ช่องจำเป็นของบุคลากรคือ เลขที่ตำแหน่ง ชื่อ-นามสกุล และหน่วยงาน/สถานศึกษา ส่วนใบรับรองต้องกรอก เลขที่ตำแหน่ง ประเภทใบรับรอง ชื่อใบรับรองวิชาชีพ และหน่วยงานผู้ออก</li>
+<li>เลือกชื่อหน่วยงานเต็มตามรายการ เพื่อหลีกเลี่ยงรหัสต่างจากโครงการเดิม</li>
+<li>เลือกฝ่ายของวิทยาลัยหรือส่วนราชการสถาบันให้ตรงประเภท ระบบจะตรวจซ้ำก่อนนำเข้า</li>
+<li>หลายสาขาวิชาในวุฒิสูงสุดให้คั่นด้วย ; เช่น การบริหารการศึกษา; เทคโนโลยีการศึกษา</li>
+<li>วันที่ใช้ ค.ศ. YYYY-MM-DD หรือวันที่ Excel ไม่ใช้ปี พ.ศ. ใส่ในช่องวันที่ ค.ศ.</li>
+<li>เลขที่ตำแหน่ง เลขที่ใบรับรอง และโทรศัพท์ใช้รูปแบบ Text เพื่อรักษาศูนย์นำหน้า</li>
+<li>ไฟล์เก่ามี address หรือ ที่อยู่ ให้ลบคอลัมน์นี้ ไม่ใช่เพียงล้างค่า เพราะรุ่น 1.9 ไม่รับคอลัมน์ดังกล่าว</li>
+<li>ไฟล์นี้ใช้เพิ่มรายชื่อใหม่ ไม่ใช้เขียนทับหรืออัปเดตรายชื่อเดิม ถ้าเลขที่ตำแหน่งซ้ำให้เปิดแก้ไขผ่านแฟ้มบุคลากร</li>
+<li>จำกัด 500 คน / 5,000 ใบ / 100 ใบต่อคน / ไฟล์ไม่เกิน 5 MB ไม่ใส่สูตรในสองชีตนำเข้า</li>
+<li>บันทึกเป็น .xlsx แล้วเปิดข้อมูลบุคลากร → อัปโหลด Excel → เลือกไฟล์ → ตรวจสอบ → ยืนยัน</li>
+</ol>
+<h2>8. แอดมินมอบหมายผู้รับผิดชอบส่วนกลางหรือวิทยาลัย</h2>
+<ol>
+<li>เพิ่มทะเบียนบุคลากรของผู้รับผิดชอบก่อน และเลือกหน่วยงานต้นสังกัดให้ถูกต้อง</li>
+<li>เปิดจัดการบัญชี → สร้างบัญชี กำหนด Username และรหัสผ่านให้บุคลากรตามเดิม</li>
+<li>เลือกกำหนดสิทธิ์ของบัญชีนั้น</li>
+<li>เลือกหน่วยงานที่รับผิดชอบเป็นส่วนกลางสถาบัน หรือวิทยาลัยตามที่ได้รับมอบหมาย</li>
+<li>เลือกขอบเขตทั้งหน่วยงานหรือเฉพาะรายชื่อ</li>
+<li>เลือกสิทธิ์ตามงาน เช่น แก้ไขทะเบียน, แก้ไขวุฒิ, จัดการใบรับรอง, จัดการเอกสาร</li>
+<li>ถ้าต้องนำเข้า Excel ต้องมีสิทธิ์ดูข้อมูล เพิ่มบุคลากร แก้ไขทะเบียน และนำเข้า พร้อมสิทธิ์วุฒิ/ใบรับรองเมื่อไฟล์มีข้อมูลส่วนนั้น และต้องรับผิดชอบทั้งหน่วยงาน</li>
+<li>ระบุเหตุผล ตรวจรายการ แล้วบันทึก ให้ผู้รับผิดชอบออกจากระบบและเข้าสู่ระบบใหม่</li>
+</ol>
+<p>บุคลากรทั่วไปแก้ไขช่องทางติดต่อและรูปตนเองได้ การแก้ทะเบียน วุฒิ หรือใบรับรองของคนอื่นต้องได้รับมอบหมาย สิทธิ์ส่วนกลางไม่เกิดขึ้นอัตโนมัติจากชื่อหรืออีเมล การลบทะเบียนยังให้ admin พิจารณาหรือดำเนินการ และมีประวัติ/กู้คืนตามระบบเดิม</p>
+<h2>9. เพิ่มหรือจัดการหน่วยงานในอนาคต</h2>
+<p>ใช้บัญชี admin เปิดตั้งค่าระบบ → หน่วยงานและสถานศึกษา → เพิ่มหน่วยงาน/สถานศึกษา กรอกชื่อ จังหวัด และประเภทหน่วยงานเป็น “สถานศึกษา” หรือ “ส่วนกลางสถาบัน”</p>
+<p>แก้ไขชื่อ ปิดใช้งาน เปิดใช้งาน หรือลบได้ตามสิทธิ์พร้อมเหตุผล ระบบไม่ให้ลบถาวรเมื่อมีบุคลากรหรือสิทธิ์อ้างอิง ให้ปิดใช้งานแทน และไม่ให้เปลี่ยนประเภทหน่วยงานที่มีทะเบียนบุคลากรแล้ว เพื่อป้องกันฝ่ายไม่ตรงกับโครงสร้าง</p>
+<p>กรณีเปลี่ยนฝ่าย/ส่วนราชการรายบุคคล ให้แก้ไขผ่านแฟ้มของบุคคลนั้น ตรวจค่าเดิม/ค่าใหม่ ระบุเหตุผล และยืนยัน ประวัติจะเก็บงาน/แผนก/กลุ่มงานใหม่ด้วย</p>
+<h2>10. อัปเดต Apps Script ของระบบเดิม</h2>
+<p>ฟิลด์ใหม่ส่งสำเนาไป Google Sheets ผ่านโค้ดอ่านคอลัมน์อัตโนมัติ ไม่ต้องเพิ่มคอลัมน์ในชีตด้วยมือ รุ่นนี้แก้ app_version ในไฟล์สำรองให้เป็น 1.9.0 ด้วย จึงควรอัปเดต Code.gs ให้ตรงกัน</p>
+<ol>
+<li>เปิด https://script.google.com ผ่าน Chrome หรือ Edge แล้วเลือกโครงการ HR เดิม</li>
+<li>เปิดไฟล์ apps-script/Code.gs รุ่น 1.9 ใน VS Code คัดลอกทั้งหมดไปแทนไฟล์ Code.gs ใน Apps Script แล้ว Save</li>
+<li>ตรวจ Project Settings → Script properties ว่าค่าเดิม BRIDGE_SECRET, DRIVE_FOLDER_ID, SHEET_ID, SUPABASE_URL และ SUPABASE_SERVICE_ROLE_KEY ยังครบ ห้ามนำค่าลับเหล่านี้ใส่หน้าเว็บหรือ Excel</li>
+<li>เลือก Deploy → Manage deployments → Edit ของ Web app เดิม</li>
+<li>เลือก Version = New version → Deploy เพื่อคง URL /exec เดิม</li>
+<li>หากสร้าง Deployment ใหม่จน URL เปลี่ยน ต้องแก้ GAS_URL ใน Supabase → Edge Functions → Secrets ให้ตรง URL /exec ใหม่</li>
+<li>กลับเว็บจริง เข้าสู่ระบบ admin → ตั้งค่าระบบ → ส่งสำเนาไป Google Sheets แล้วเปิดชีตตรวจหน่วยงานและคอลัมน์สมรรถนะ</li>
+<li>ทดสอบสำรองข้อมูล และตรวจไฟล์ JSON ว่า app_version เป็น 1.9.0</li>
+</ol>
+<p>การแก้โค้ด Apps Script แล้วกด Save อย่างเดียวยังไม่เปลี่ยนโค้ดที่ Web app ใช้ ต้องเลือก New version และ Deploy</p>
+<h2>11. หากต้องติดตั้งใหม่ตั้งแต่ต้น</h2>
+<p>ส่วนนี้สำหรับโครงการใหม่ว่างเท่านั้น ไม่ต้องทำซ้ำในโครงการ HR ที่อัปเกรดแล้ว</p>
+<ol>
+<li>สร้างโครงการ Supabase ใหม่ จด Project URL และ Publishable key ของโครงการนั้น</li>
+<li>เปิด SQL Editor รัน supabase/schema.sql ฉบับเต็มหนึ่งครั้ง เพื่อสร้างตาราง กฎสิทธิ์ และข้อมูลหน่วยงานตั้งต้น</li>
+<li>ใน Google Drive สร้างโฟลเดอร์ส่วนตัวสำหรับเอกสารและ Google Sheets สำหรับข้อมูลสำเนา ใช้บัญชีหน่วยงานที่รับผิดชอบ ไม่เปิดแชร์ไฟล์แบบ Anyone with the link</li>
+<li>คัดลอก Folder ID จาก URL ของโฟลเดอร์ และ Sheet ID จาก URL ของ Google Sheets</li>
+<li>สร้าง Apps Script วาง apps-script/Code.gs แล้วใส่ Script properties ตามตารางด้านล่าง</li>
+<li>สร้าง BRIDGE_SECRET ด้วยคำสั่ง Node.js ใน Terminal เก็บค่าที่ได้ไว้เฉพาะผู้ติดตั้ง ใช้ค่าเดียวกันใน Apps Script และ Supabase Secrets</li>
+<li>Deploy Apps Script เป็น Web app ให้รันด้วยสิทธิ์เจ้าของสคริปต์ และเปิดให้บริการเรียกโดยไม่ต้องล็อกอิน Google หากบัญชีองค์กรห้าม Anyone ต้องให้ผู้ดูแล Workspace จัดวิธีเข้าถึงที่บริการเรียกได้ โค้ดนี้ตรวจลายเซ็นคำขอทุกครั้ง</li>
+<li>คัดลอก URL ที่ลงท้าย /exec เป็น GAS_URL</li>
+<li>เปิดโฟลเดอร์หลักใน VS Code แล้วสร้าง .env จาก .env.example ใส่ GAS_URL, BRIDGE_SECRET และ ALLOWED_ORIGINS</li>
+<li>สร้าง .env.bootstrap จาก scripts/bootstrap.env.example สำหรับสร้าง admin ในโครงการใหม่เท่านั้น</li>
+<li>ตั้ง Secrets และ Deploy ฟังก์ชันตามตัวอย่าง แล้วสร้าง admin ครั้งแรก</li>
+<li>ใส่ Project URL/Publishable key ของโครงการใหม่ลง dist/config.js และ deployment/config.production.js ก่อนเผยแพร่ GitHub Pages</li>
+<li>สร้าง Repository ของหน่วยงาน ส่งโค้ดและเปิด GitHub Pages ผ่าน Actions ตามขั้นตอนที่ 3</li>
+</ol>
+<pre><code>node -e &quot;console.log(require(&#x27;crypto&#x27;).randomBytes(32).toString(&#x27;hex&#x27;))&quot;</code></pre>
+<div class="scroll"><table>
+<tr><th>ค่า</th><th>หาได้จากส่วนไหน</th><th>ใช้ที่ไหน</th></tr>
+<tr><td>SUPABASE_URL</td><td>Dashboard → โครงการ → Project URL</td><td>Apps Script, .env.bootstrap และ dist/config.js</td></tr>
+<tr><td>SUPABASE_SERVICE_ROLE_KEY</td><td>Dashboard → Settings → API Keys → Legacy service_role ของโครงการเดียวกัน</td><td>Apps Script และ .env.bootstrap เท่านั้น</td></tr>
+<tr><td>Publishable key</td><td>Dashboard → Settings → API Keys → Publishable key</td><td>dist/config.js และ deployment/config.production.js</td></tr>
+<tr><td>DRIVE_FOLDER_ID</td><td>ส่วนท้าย URL หลัง /folders/ ใน Google Drive</td><td>Apps Script Script properties</td></tr>
+<tr><td>SHEET_ID</td><td>URL Google Sheets ระหว่าง /d/ และ /edit</td><td>Apps Script Script properties</td></tr>
+<tr><td>BRIDGE_SECRET</td><td>ผลสุ่มจากคำสั่ง Node.js</td><td>Apps Script Script properties และ Supabase Secrets ใช้ค่าเดียวกัน</td></tr>
+<tr><td>GAS_URL</td><td>Apps Script → Deploy → Web app URL ลงท้าย /exec</td><td>Supabase Secrets</td></tr>
+<tr><td>ALLOWED_ORIGINS</td><td>ต้นทางเว็บไซต์จริง เช่น https://HRvec-adaman2.github.io</td><td>Supabase Secrets ไม่ใส่ path ของ Repository</td></tr>
+</table></div>
+<p>ตัวอย่าง .env สำหรับโครงการ HR ที่ใช้ GitHub Pages เดิม:</p>
+<pre><code>GAS_URL=https://script.google.com/macros/s/รหัส_DEPLOYMENT_ของคุณ/exec
+BRIDGE_SECRET=ค่าที่สุ่มและตรงกับใน_Apps_Script
+ALLOWED_ORIGINS=https://hrvec-adaman2.github.io,https://hr-andaman2.muangyor.chatgpt.site</code></pre>
+<p>คำสั่ง Deploy ใช้ใน VS Code Terminal ที่โฟลเดอร์หลัก รันทีละบรรทัด เปลี่ยน PROJECT_REF เป็นรหัสโครงการใหม่ของคุณ ถ้าเป็น HR เดิมต้องเป็น oftlfxiywhtoftxluviv:</p>
+<pre><code>npx.cmd supabase login
+npx.cmd supabase link --project-ref PROJECT_REF
+npx.cmd supabase secrets set --env-file .env --project-ref PROJECT_REF
+npx.cmd supabase functions deploy hr-bridge --no-verify-jwt --use-api --project-ref PROJECT_REF
+npx.cmd supabase functions deploy hr-accounts --no-verify-jwt --use-api --project-ref PROJECT_REF
+npx.cmd supabase functions list --project-ref PROJECT_REF</code></pre>
+<p>--use-api ใช้บริการแพ็กเกจระหว่าง Deploy จึงไม่ต้องเปิด Docker สำหรับคำสั่ง Deploy นี้ ส่วน --no-verify-jwt ใช้คู่กับโค้ดในชุดนี้ ซึ่งตรวจผู้ใช้ เซสชัน และสิทธิ์ภายในฟังก์ชัน ต้องใช้โฟลเดอร์ functions ครบทั้งชุด</p>
+<p>สร้าง admin เฉพาะโครงการใหม่ที่ยังไม่มี admin:</p>
+<pre><code>node --env-file=.env.bootstrap scripts/bootstrap-admin.mjs</code></pre>
+<p>บัญชีเริ่มต้นคือ admin / 123456 ระบบบังคับเปลี่ยนก่อนเปิดข้อมูล สคริปต์ไม่สร้างซ้ำเมื่อมี admin อยู่แล้ว โครงการ HR เดิมให้ใช้รหัสปัจจุบันและไม่รันสคริปต์นี้ซ้ำ</p>
+<p>Hosted Supabase จัดเตรียมตัวแปร SUPABASE_... ให้ Edge Functions เอง ไม่ส่ง .env.bootstrap เข้า Secrets และไม่อัปโหลดไฟล์ .env ทั้งสองไฟล์ขึ้น GitHub</p>
+<h2>12. ตรวจรับก่อนเปิดให้หน่วยงานกรอกข้อมูลจริง</h2>
+<div class="scroll"><table>
+<tr><th>สิ่งที่ตรวจ</th><th>ผลที่ต้องเห็น</th></tr>
+<tr><td>รุ่นหน้าเว็บ</td><td>ท้ายหน้าแสดงรุ่น 1.9</td></tr>
+<tr><td>โหมดใช้งาน</td><td>ป้าย “ยืนยันบัญชีแล้ว” หลังเข้าบัญชีจริง ไม่ใช่ “ข้อมูลสาธิต”</td></tr>
+<tr><td>หน่วยงาน</td><td>ส่วนกลางสถาบันและวิทยาลัยครบ</td></tr>
+<tr><td>ฝ่าย</td><td>เลือกส่วนกลางแล้วเห็น 5 ส่วนราชการ เลือกวิทยาลัยแล้วเห็น 4 ฝ่าย</td></tr>
+<tr><td>ที่อยู่</td><td>ไม่มีช่องกรอกและไม่มีคอลัมน์ในแม่แบบ</td></tr>
+<tr><td>ใบรับรอง</td><td>บันทึกสมรรถนะ สาขาอาชีพ ระดับ และมาตรฐานได้</td></tr>
+<tr><td>หลายใบ</td><td>เปิดแฟ้มแล้วเห็นจำนวนใบตรงกับ Excel</td></tr>
+<tr><td>สิทธิ์</td><td>เจ้าหน้าที่เห็นและแก้เฉพาะหน่วยงาน/รายชื่อ/หัวข้อที่ได้รับมอบหมาย</td></tr>
+<tr><td>การเปลี่ยนแปลง</td><td>ตรวจค่าเดิม/ใหม่ เหตุผล และประวัติได้</td></tr>
+<tr><td>เอกสารจริง</td><td>อัปโหลดหนึ่งไฟล์ ตรวจแล้วดาวน์โหลดกลับได้</td></tr>
+<tr><td>สำเนา Google</td><td>ส่งสำเนาและสำรองผ่านระบบได้ คอลัมน์ใหม่ครบ</td></tr>
+</table></div>
+<p>ผลทดสอบโค้ดชุดส่งมอบ: 100 การทดสอบ Node.js; 76 ข้อทดสอบสิทธิ์รุ่น 1.8; 40 ข้อทดสอบฐานข้อมูลรุ่น 1.9; ทดสอบแม่แบบด้วยตัวอ่าน Excel ของเว็บ; และทดสอบฟอร์มส่วนกลาง/ใบรับรอง/หน้าตรวจสอบก่อนบันทึกในเบราว์เซอร์โหมดสาธิต รวมถึงตรวจ HTTP ระบบจริง 12 กรณีเกี่ยวกับ Origin และการปฏิเสธคำขอที่ไม่มีสิทธิ์</p>
+<p>การตรวจระบบจริงในครั้งนี้ยืนยันฐานข้อมูลและสถานะ Edge Functions แล้ว ยังไม่ได้เข้าสู่ระบบด้วยรหัสผู้ใช้จริงหรืออัปโหลดไฟล์ไป Google Drive และยังไม่ได้ส่ง Commit เข้า Repository GitHub ของคุณ ต้องตรวจรับด้วยบัญชีหน่วยงานหลังอัปเดตหน้าเว็บและ Apps Script</p>
+<p>Security Advisor ก่อนและหลังอัปเกรดมีคำเตือนเดิมเท่ากัน: ฟังก์ชัน SECURITY DEFINER ที่เปิดให้บัญชีผ่านการตรวจสิทธิ์เรียก 9 รายการ และ Leaked Password Protection ยังปิดอยู่ ผู้ติดตั้งควรตรวจการตั้งค่า Auth ก่อนเปิดใช้งานเต็มรูปแบบตามแผนบริการ โดยไม่ตัดการตรวจสิทธิ์ในฟังก์ชันเพื่อแก้คำเตือน</p>
+<h2>13. ปัญหาที่พบบ่อย</h2>
+<div class="scroll"><table>
+<tr><th>อาการ</th><th>วิธีแก้</th></tr>
+<tr><td>หน้าเว็บยังแสดง 1.8</td><td>ตรวจ Actions ของ main ให้เขียว และ Ctrl + Shift + R</td></tr>
+<tr><td>ยังเป็นข้อมูลสาธิต</td><td>ตรวจ dist/config.js ว่าไม่ว่าง แล้ว Commit และ Sync อีกครั้ง</td></tr>
+<tr><td>ไม่พบส่วนกลาง</td><td>ตรวจว่าเปิดโครงการ HR ถูกต้อง ฐานข้อมูลได้ 1.9.0 และหน้าเว็บเป็น 1.9</td></tr>
+<tr><td>ฝ่ายไม่ตรงหน่วยงาน</td><td>วิทยาลัยใช้ฝ่ายสถานศึกษา ส่วนกลางใช้ส่วนราชการสถาบัน อย่าใช้รายการข้ามประเภท</td></tr>
+<tr><td>พบ address ไม่รองรับ</td><td>ลบทั้งคอลัมน์ที่อยู่ใน Excel เก่า แล้วใช้แม่แบบใหม่</td></tr>
+<tr><td>ชื่อ/เลขที่ตำแหน่งซ้ำ</td><td>ตรวจทะเบียนและรายการที่ลบ ไม่สร้างรายชื่อเดิมซ้ำจาก Excel</td></tr>
+<tr><td>HR-bridge ตอบ 500</td><td>ตรวจ Edge Functions → Logs และ Secrets ทั้ง 3 ค่า ตรวจ Script properties และ Web app /exec; ถ้าบันทึกบุคลากรได้แต่ไฟล์ไม่ได้ ให้ตรวจส่วน Google Bridge</td></tr>
+<tr><td>สร้างบัญชี/บันทึกไม่ได้หลังเปลี่ยนสิทธิ์</td><td>ออกจากระบบแล้วเข้าใหม่ ตรวจสิทธิ์งานและขอบเขตที่มอบหมาย</td></tr>
+<tr><td>npx.ps1 cannot be loaded</td><td>ใช้ npx.cmd หรือเลือก Command Prompt ใน VS Code ไม่ต้องลดนโยบายทั้งเครื่อง</td></tr>
+<tr><td>git ไม่พบ</td><td>ติดตั้ง Git for Windows จาก https://git-scm.com แล้วปิด–เปิด VS Code ใหม่</td></tr>
+<tr><td>Project INACTIVE</td><td>เปิด Dashboard โครงการที่ถูกต้องและตรวจสถานะ ไม่ Deploy ไปโครงการเก่าที่พักใช้งาน</td></tr>
+</table></div>
+<p>เอกสารประกอบผู้ให้บริการ: https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site — https://supabase.com/docs/reference/cli/supabase-functions-deploy — https://developers.google.com/apps-script/guides/web</p></main></html>

@@ -1,0 +1,9 @@
+// Defaults checked against the institute chart and OVEC 2569 structure on 2026-10-22.
+export const instituteName='สถาบันการอาชีวศึกษาภาคใต้ 2';
+export const collegeDepartments=["ฝ่ายบริหารทรัพยากร", "ฝ่ายยุทธศาสตร์และแผนงาน", "ฝ่ายกิจการนักเรียน นักศึกษา", "ฝ่ายวิชาการ"];
+export const instituteDepartments=["สำนักงานผู้อำนวยการสถาบัน", "สำนักพัฒนายุทธศาสตร์และความร่วมมืออาชีวศึกษา", "สำนักพัฒนากิจการนักศึกษาและกิจการพิเศษ", "ศูนย์วิจัยและพัฒนาการอาชีวศึกษา", "อาชีวศึกษาบัณฑิต"];
+export const institutePositions=["ผู้อำนวยการสถาบัน", "รองผู้อำนวยการสถาบัน", "ผู้ช่วยผู้อำนวยการสถาบัน", "ผู้อำนวยการสำนักงาน", "ผู้อำนวยการสำนัก", "ผู้อำนวยการศูนย์", "หัวหน้างาน"];
+export const legacyDepartments={'วิชาการ':'ฝ่ายวิชาการ','บริหารทรัพยากร':'ฝ่ายบริหารทรัพยากร','แผนงานและความร่วมมือ':'ฝ่ายยุทธศาสตร์และแผนงาน','ฝ่ายแผนงานและความร่วมมือ':'ฝ่ายยุทธศาสตร์และแผนงาน','พัฒนากิจการนักเรียน':'ฝ่ายกิจการนักเรียน นักศึกษา','พัฒนากิจการนักเรียนนักศึกษา':'ฝ่ายกิจการนักเรียน นักศึกษา','ฝ่ายพัฒนากิจการนักเรียนนักศึกษา':'ฝ่ายกิจการนักเรียน นักศึกษา'};
+export const unitType=s=>s?.unit_type==='institute'?'institute':'college';
+export function departmentsFor(s,lookups=[]){const type=unitType(s),category=type==='institute'?'institute_department':'department',stored=lookups.filter(l=>l.category===category).map(l=>l.name);return [...new Set([...(type==='institute'?instituteDepartments:collegeDepartments),...stored.filter(n=>!Object.hasOwn(legacyDepartments,n))])];}
+export function validateStructure(p,schools,lookups=[]){if(Object.hasOwn(p,'address'))throw Error('รุ่น 1.9 ไม่จัดเก็บข้อมูลที่อยู่ กรุณาลบคอลัมน์ address');const s=schools.find(s=>s.id===+p.school_id);if(!s)throw Error('ไม่พบหน่วยงาน/สถานศึกษา');if(p.department&&!departmentsFor(s,lookups).includes(p.department))throw Error('ฝ่าย/ส่วนราชการไม่ตรงกับประเภทหน่วยงานที่เลือก');if(String(p.work_unit||'').length>300)throw Error('งาน/แผนก/กลุ่มงานยาวเกิน 300 ตัวอักษร');return p;}

@@ -26,6 +26,7 @@ jobs:
         run: |
           npm install --prefix "$RUNNER_TEMP/hrvec-checks" --no-audit --no-fund --ignore-scripts --save-exact @electric-sql/pglite@0.3.14
           HR_PGLITE_MODULE="$RUNNER_TEMP/hrvec-checks/node_modules/@electric-sql/pglite/dist/index.js" node tests/schools-db.mjs
+          HR_PGLITE_MODULE="$RUNNER_TEMP/hrvec-checks/node_modules/@electric-sql/pglite/dist/index.js" node tests/institute-db.mjs
       - run: python3 scripts/package.py
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
