@@ -1,8 +1,18 @@
 <!doctype html><html lang="th"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>คู่มือ HRVec-Andaman2 รุ่น 1.8</title><style>body{font:16px/1.85 Tahoma,sans-serif;color:#203b59;background:#f4f7fd;max-width:1050px;margin:auto;padding:40px}main{padding:42px;background:white;border:1px solid #dce7f5;border-radius:20px}h1,h2,h3{color:#315b91;line-height:1.45}h1{font-size:28px}h2{margin-top:36px;font-size:21px;border-bottom:1px solid #dce7f5;padding-bottom:10px}a{color:#255bb0;overflow-wrap:anywhere}table{border-collapse:collapse;width:100%;margin:15px 0}th,td{border:1px solid #dce7f5;padding:12px;text-align:left;vertical-align:top}th{background:#edf3ff}pre{padding:18px;background:#f0f5fc;border:1px solid #dce7f5;border-radius:12px;overflow:auto}code{font-size:13px}p,li{overflow-wrap:anywhere}img{max-width:100%;height:auto;border:1px solid #dce7f5;border-radius:14px}.scroll{overflow:auto}@media(max-width:640px){body{padding:12px}main{padding:20px}h1{font-size:23px}th,td{padding:9px}}@media print{body{padding:0;background:white}main{padding:0;border:0}pre{white-space:pre-wrap}img{max-height:230mm;object-fit:contain}h2{break-after:avoid}tr{break-inside:avoid}}</style><main><h1>HRVec-Andaman2 รุ่น 1.8 — คู่มืออัปเกรดและใช้งาน</h1>
 <p>จัดทำ 22 ตุลาคม 2569</p>
-<h2>สถานะก่อนนำขึ้นระบบจริง</h2>
+<h2>สถานะการอัปเกรด 22 ตุลาคม 2569</h2>
 <p>ชุดนี้มีโค้ดหน้าเว็บ ฐานข้อมูล ฟังก์ชันหลังบ้าน Apps Script และการทดสอบครบสำหรับรุ่น 1.8 หน้าสาธิตใช้ข้อมูลสมมติในเบราว์เซอร์</p>
-<p><strong>การอัปเกรดฐานข้อมูลจริงและ Edge Functions ยังไม่ได้ดำเนินการ</strong> การตรวจอนุมัติอัตโนมัติขอการยืนยันก่อนเพิ่มบทบาทและเปลี่ยนกฎ RLS ของ production ต้องอนุมัติการอัปเกรดก่อนใช้ขั้นตอนที่เปลี่ยนระบบจริงด้านล่าง ไม่มีการมอบหมายสิทธิ์ให้บุคคลจริงหรือรีเซ็ตรหัสผ่านระหว่างพัฒนา</p>
+<p><strong>อัปเกรดฐานข้อมูลจริงและเผยแพร่ Edge Functions รุ่น 1.8 แล้ว</strong> ตามการอนุญาตของเจ้าของโครงการ ตรวจฐานข้อมูลได้ <code>1.8.0</code> และฟังก์ชันทั้งสองเป็น <code>ACTIVE</code> หมายเลข Deployment 5 ของ Supabase เป็นลำดับการเผยแพร่ ไม่ใช่เลขรุ่นแอป</p>
+<div class="scroll"><table>
+<tr><th>ส่วนระบบ</th><th>ผลตรวจจริง</th></tr>
+<tr><td>ฐานข้อมูล</td><td>รุ่น 1.8.0; migration <code>20261022083857_school_delegation_v18</code></td></tr>
+<tr><td>hr-bridge / hr-accounts</td><td>ACTIVE ทั้งคู่; Deployment version 5</td></tr>
+<tr><td>ข้อมูลเดิม</td><td>สถานศึกษา 7 แห่ง บัญชี 2 บัญชีคงอยู่ครบ; ยังไม่มีทะเบียนบุคลากรหรือเอกสารในฐานข้อมูลนี้</td></tr>
+<tr><td>สิทธิ์ใหม่</td><td>RLS เปิดทั้ง 2 ตาราง; ไม่มอบหมายสิทธิ์ให้บุคคลจริงและไม่รีเซ็ตรหัสเดิม</td></tr>
+<tr><td>ตรวจ HTTP</td><td>ผ่าน 14 กรณี: Origin ที่อนุญาต, ไม่มีเซสชัน, เซสชันไม่ถูกต้อง, Origin ที่ไม่ได้อนุญาต</td></tr>
+<tr><td>การใช้งานครบวงจร</td><td>ยังไม่ได้เข้าสู่ระบบด้วยบัญชีจริงหรือทดสอบไฟล์ Google Drive</td></tr>
+</table></div>
+<p><strong>สำหรับโครงการ HR นี้ ไม่ต้องรัน SQL หรือ Deploy ฟังก์ชันซ้ำ</strong> ขั้นตอนที่ 2–3 ด้านล่างเก็บไว้สำหรับตรวจสอบหรือติดตั้งใหม่ งานที่เหลือคืออัปเดตหน้าเว็บ GitHub Pages ตามขั้นตอนที่ 5 อัปเดต Apps Script ตามขั้นตอนที่ 4 แล้วเข้าสู่ระบบด้วยบัญชีเดิมเพื่อมอบหมายเจ้าหน้าที่และตรวจรับตามขั้นตอนที่ 6–10 หน้าสาธิตในแชตยังใช้ข้อมูลสมมติ</p>
 <p>โครงการ HR ที่ถูกต้องคือ <code>oftlfxiywhtoftxluviv</code> ไม่ใช้โครงการเก่า <code>unbxltvodbcesqcmorjk</code></p>
 <h2>1. เปิดไฟล์และเตรียมโปรแกรม</h2>
 <div class="scroll"><table>
@@ -20,9 +30,9 @@
 <p>ใช้ Chrome หรือ Edge เปิด https://supabase.com/dashboard/project/oftlfxiywhtoftxluviv</p>
 <ol>
 <li>เลือก SQL Editor → New query</li>
-<li>ใช้ VS Code เปิด <code>supabase/migrations/20261022051533_school_delegation_v18.sql</code></li>
+<li>ใช้ VS Code เปิด <code>supabase/migrations/20261022083857_school_delegation_v18.sql</code></li>
 <li>คัดลอกทั้งไฟล์ไปวางใน SQL Editor ของโครงการ HR</li>
-<li>หลังอนุมัติการอัปเกรด production แล้ว กด Run หนึ่งครั้ง</li>
+<li>สำหรับฐานข้อมูลเดิมรุ่น 1.7 ที่ยังไม่อัปเกรดและได้รับอนุญาตแล้ว กด Run หนึ่งครั้ง โครงการ HR นี้ทำเสร็จแล้ว ให้ใช้คำสั่งตรวจในข้อถัดไปแทน</li>
 <li>ตรวจด้วยคำสั่งต่อไปนี้ ต้องได้ <code>1.8.0</code></li>
 </ol>
 <pre><code>select public.hr_schema_version();</code></pre>
@@ -141,4 +151,9 @@ npx.cmd supabase functions list --project-ref oftlfxiywhtoftxluviv</code></pre>
 <tr><td>CORS ไม่ผ่าน</td><td>ALLOWED_ORIGINS ต้องมี https://hrvec-adaman2.github.io ไม่มีชื่อ Repository ต่อท้าย</td></tr>
 <tr><td>Bootstrap admin ซ้ำไม่ได้</td><td>ใช้แอดมินเดิม การอัปเกรดไม่ต้องสร้างบัญชีแอดมินอีก</td></tr>
 </table></div>
-<p>การทดสอบบัญชีจริงและ Google Drive ครบวงจรต้องทำหลังติดตั้ง production ชุดทดสอบที่ส่งมอบใช้ข้อมูลสมมติในฐานข้อมูลแยก ไม่สร้างบุคลากรจริงและไม่เปลี่ยนรหัสแอดมิน</p></main></html>
+<p>การทดสอบบัญชีจริงและ Google Drive ครบวงจรยังต้องทำหลังอัปเดตหน้าเว็บและ Apps Script ชุดทดสอบที่ส่งมอบใช้ข้อมูลสมมติในฐานข้อมูลแยก ไม่สร้างบุคลากรจริงและไม่เปลี่ยนรหัสแอดมิน</p>
+<h2>11. ผลตรวจความปลอดภัยและขอบเขตที่ยังต้องตรวจรับ</h2>
+<p>ตรวจ Supabase Advisors หลังอัปเกรดแล้ว ไม่มีข้อแจ้งเตือนตาราง public ที่ไม่ได้เปิด RLS ฟังก์ชัน API ใหม่ทั้งสามเป็น SECURITY INVOKER และล็อก search_path ส่วน helper ที่จำเป็นต้องใช้สิทธิ์สูงอยู่ใน schema hr_private พร้อมตรวจบัญชีและสิทธิ์</p>
+<p>Advisors ยังเตือน SECURITY DEFINER ของ API เดิม 9 ฟังก์ชันที่ระบบใช้ตรวจบัญชีและบันทึกผ่านการตรวจสิทธิ์ ต้องตรวจเนื้อหาฟังก์ชันร่วมกับการจำกัด EXECUTE ไม่เปลี่ยนเป็น INVOKER ทันทีโดยไม่ตรวจผลกระทบ รายละเอียด: https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable</p>
+<p>Auth ยังไม่ได้เปิดตรวจรหัสผ่านที่เคยรั่วไหล เจ้าของโครงการตรวจแผนบริการและเปิดได้ที่ Authentication → Settings/Security ตามหน้า Dashboard ของตน คู่มือ: https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection</p>
+<p>ด้านประสิทธิภาพยังมีคำแนะนำดัชนี Foreign Key 5 จุด และการเรียก auth ใน RLS 3 จุดจากโครงสร้างเดิม บันทึกไว้ในผลตรวจ ไม่ขยาย migration รุ่นนี้ไปแก้ส่วนอื่น ข้อมูลขณะตรวจยังไม่มีทะเบียนบุคลากร จึงยังไม่ได้วัดประสิทธิภาพจากปริมาณใช้งานจริง รายละเอียด: https://supabase.com/docs/guides/database/database-linter?lint=0001_unindexed_foreign_keys และ https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan</p></main></html>
