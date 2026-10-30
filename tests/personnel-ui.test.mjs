@@ -31,3 +31,21 @@ test('staff can edit and inspect own history or request removal, but cannot dire
  api.demoRole('personnel');await navigate('#archive');assert.equal(location.hash,'#archive');assert.equal(elements.get('#crumb').textContent,'ข้อมูลบุคลากร');assert.doesNotMatch(elements.get('#main').innerHTML,/data-action="(?:deleteperson|restoreperson)"/);assert.doesNotMatch(elements.get('#nav').innerHTML,/href="#archive"/);
  assert.match(elements.get('#main').innerHTML,/data-action="editperson" data-id="demo-0"/);assert.match(elements.get('#main').innerHTML,/data-action="requestremoval"/);assert.match(elements.get('#main').innerHTML,/ประวัติของฉัน/);await click({action:'deleteperson',id:'demo-0'});assert.match(elements.get('#toast').textContent,/ผู้ดูแลระบบ/);
 });
+test('the personnel form displays Buddhist dates and saves academic and administration fields through review',async()=>{
+ api.demoRole('admin');api.openDemoDetails();await navigate('#personnel');assert.doesNotMatch(elements.get('#nav').innerHTML,/href="#guide"|วิธีใช้งาน/);
+ const original=(await api.all('personnel')).find(p=>p.id==='demo-0');await click({action:'editperson',id:original.id});
+ const html=elements.get('#modalbody').innerHTML;assert.match(html,/name="university_rank"/);assert.match(html,/ผู้ช่วยศาสตราจารย์ \(ผศ\.\)/);assert.match(html,/name="administration_field"/);
+ assert.match(html,/value="15\/05\/2511"/);assert.doesNotMatch(html,/type="date"|name="status"/);
+ const values=Object.fromEntries(['employee_code','full_name','school_id','position','department','academic_rank','highest_education','email','phone','work_unit'].map(k=>[k,String(original[k]??'')]));
+ Object.assign(values,{education_major:original.education_majors[0],birth_date:'15/05/2511',start_date:'01/05/2543',university_rank:'ผู้ช่วยศาสตราจารย์',administration_field:'บริหารงานบุคคล'});
+ await submit(form('personform',values));assert.match(elements.get('#modalbody').innerHTML,/ตำแหน่งทางวิชาการ/);assert.match(elements.get('#modalbody').innerHTML,/ด้านงานบริหารทั่วไป/);
+ await submit(form('personreviewform',{reviewed:'on',reason:'ปรับข้อมูลตำแหน่งทางวิชาการ'}));
+ const changed=(await api.all('personnel')).find(p=>p.id===original.id);assert.equal(changed.birth_date,'1968-05-15');assert.equal(changed.start_date,'2000-05-01');assert.equal(changed.university_rank,'ผู้ช่วยศาสตราจารย์');assert.equal(changed.administration_field,'บริหารงานบุคคล');
+});
+test('dedicated photo management shows a preview and reviews removal before saving with an image-free history',async()=>{
+ api.demoRole('personnel');await navigate('#personnel');let p=(await api.all('personnel')).find(p=>p.id==='demo-0');const photo='data:image/png;base64,aGVsbG8=';
+ await api.saveReviewedPersonnel({id:p.id,avatar_data:photo},null,p.revision,'เพิ่มรูปเพื่อทดสอบหน้าจอ');await navigate('#personnel');const main=elements.get('#main').innerHTML;assert.match(main,/<th>รูปถ่าย<\/th>/);assert.match(main,/data-action="photoform" data-id="demo-0"/);assert.match(main,/data:image\/png;base64,aGVsbG8=/);
+ await click({action:'photoform',id:p.id});let html=elements.get('#modalbody').innerHTML;assert.match(html,/id="photoform"/);assert.match(html,/data-photo-preview/);assert.match(html,/name="remove_avatar"/);assert.doesNotMatch(html,/name="position"/);
+ await submit(form('photoform',{remove_avatar:'on'}));html=elements.get('#modalbody').innerHTML;assert.match(html,/photo-comparison/);assert.match(html,/รูปเดิม/);assert.match(html,/รูปใหม่/);assert.equal((await api.all('personnel'))[0].avatar_data,photo);
+ await submit(form('personreviewform',{reviewed:'on',reason:'เจ้าของข้อมูลขอลบรูปถ่าย'}));p=(await api.all('personnel')).find(p=>p.id==='demo-0');assert.equal(p.avatar_data,null);const history=await api.all('personnel_changes');assert.doesNotMatch(JSON.stringify(history),/data:image\/|aGVsbG8=/);assert.ok(history.some(h=>h.reason==='เจ้าของข้อมูลขอลบรูปถ่าย'));
+});

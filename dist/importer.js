@@ -1,9 +1,12 @@
 import {validateStructure,legacyDepartments,unitType} from './structure.js';
 import {validatePerson,parseCSV,parseEducationMajors} from './core.js';
 import {validateCertificate,certKinds} from './overview.js';
+import {normalizedDate} from './dates.js';
+import {normalizeUniversityRank,personnelOptions} from './personnel-options.js';
+export {normalizedDate} from './dates.js';
 
 // New templates omit employment status. Old files can still include that column.
-export const fields=[['employee_code','เลขที่ตำแหน่ง'],['full_name','ชื่อ-นามสกุล'],['school_id','หน่วยงาน/สถานศึกษา'],['position','ตำแหน่ง'],['department','ฝ่าย/ส่วนราชการ'],['work_unit','งาน/แผนก/กลุ่มงาน'],['academic_rank','วิทยฐานะ'],['birth_date','วันเกิด'],['start_date','วันเริ่มงาน'],['email','อีเมล'],['phone','โทรศัพท์'],['highest_education','วุฒิการศึกษาสูงสุด'],['education_majors','สาขาวิชา']];
+export const fields=[['employee_code','เลขที่ตำแหน่ง'],['full_name','ชื่อ-นามสกุล'],['school_id','หน่วยงาน/สถานศึกษา'],['position','ตำแหน่ง'],['department','ฝ่าย/ส่วนราชการ'],['work_unit','งาน/แผนก/กลุ่มงาน'],['academic_rank','วิทยฐานะ'],['birth_date','วันเกิด'],['start_date','วันเริ่มงาน'],['email','อีเมล'],['phone','โทรศัพท์'],['highest_education','วุฒิการศึกษาสูงสุด'],['education_majors','สาขาวิชา'],['university_rank','ตำแหน่งทางวิชาการ'],['administration_field','ด้านงานบริหารทั่วไป']];
 export const certificateFields=[['employee_code','เลขที่ตำแหน่ง'],['kind','ประเภทใบรับรอง'],['name','ชื่อใบรับรองวิชาชีพ'],['issuer','หน่วยงานผู้ออก'],['number','เลขที่ใบรับรอง'],['issued_on','วันที่ออก'],['expires_on','วันหมดอายุ'],['occupation','สาขาอาชีพ'],['competency_level','ระดับสมรรถนะ'],['standard','มาตรฐานอ้างอิง']];
 const trim=v=>String(v??'').trim();
 const legacyFields=[...fields,['status','สถานะ']];
@@ -13,12 +16,6 @@ const previousHeadings=[
  ['ฝ่าย','department'],['วันบรรจุ','start_date'],['วันเริ่มรับราชการ','start_date'],['วันบรรจุ / เริ่มงาน','start_date'],['email','email'],
  ['สาขาวิชาของวุฒิสูงสุด','education_majors'],['ประเภทใบรับรองวิชาชีพ','kind'],['จากหน่วยงาน / ผู้ออกใบรับรอง','issuer'],['หน่วยงานที่ออกให้','issuer'],['หน่วยงานผู้ออกใบรับรอง','issuer'],['จากหน่วยงาน','issuer'],['เลขที่','number']
 ];
-export function normalizedDate(value){
- if(value==null||value==='')return null;
- if(value instanceof Date){if(isNaN(value))throw Error('วันที่ไม่ถูกต้อง');return `${value.getFullYear()}-${String(value.getMonth()+1).padStart(2,'0')}-${String(value.getDate()).padStart(2,'0')}`;}
- if(typeof value==='number'){if(!Number.isFinite(value)||value<61||value>100000)throw Error('วันที่ Excel ไม่ถูกต้อง');return new Date(Date.UTC(1899,11,30)+Math.floor(value)*86400000).toISOString().slice(0,10);}
- const str=trim(value);if(!/^\d{4}-\d{2}-\d{2}$/.test(str))throw Error('วันที่ต้องเป็นวันที่ Excel หรือ YYYY-MM-DD ค.ศ.');return str;
-}
 function headersFor(matrix,definitions,required){
  const keys=new Set(definitions.map(([k])=>k)),labels=new Map(definitions);
  const aliases=new Map(definitions.flatMap(([k,t])=>[[headerName(k),k],[headerName(t),k]]));
@@ -45,11 +42,11 @@ export function validateImport(matrix,existing,schools,lookups=[]){
   for(const k of headers.filter(k=>!['birth_date','start_date','school_id','education_majors'].includes(k)))p[k]=trim(p[k]);
   p.education_majors=parseEducationMajors(p.education_majors);
   const school=schools.find(s=>String(s.id)===trim(p.school_id)||s.name===trim(p.school_id));if(!school)throw Error('ไม่พบสถานศึกษาในระบบ');if(school.is_active===false)throw Error('สถานศึกษาปิดใช้งานแล้ว');p.school_id=school.id;
-  for(const k of ['position','status','department','academic_rank','email','phone','work_unit','highest_education'])p[k]??='';p.position||=unitType(school)==='institute'?'เจ้าหน้าที่':'ครู';p.department=legacyDepartments[p.department]||p.department;p.status||='ปฏิบัติงาน';
+  for(const k of ['position','status','department','academic_rank','email','phone','work_unit','highest_education','university_rank','administration_field'])p[k]??='';p.university_rank=normalizeUniversityRank(p.university_rank);p.position||=unitType(school)==='institute'?'เจ้าหน้าที่':'ครู';p.department=legacyDepartments[p.department]||p.department;p.status||='ปฏิบัติงาน';
   validatePerson(p);validateStructure(p,schools,lookups);if(p.employee_code.length>50||p.full_name.length>200)throw Error('เลขที่ตำแหน่งหรือชื่อยาวเกินกำหนด');
   if(codes.has(p.employee_code))throw Error('เลขที่ตำแหน่งซ้ำในไฟล์หรือระบบ: '+p.employee_code);codes.add(p.employee_code);
   if(p.email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.email))throw Error('อีเมลไม่ถูกต้อง');
-  for(const k of ['position','status','academic_rank'])if(p[k]&&lookups.length&&!lookups.some(l=>l.category===k&&l.name===p[k]))throw Error(legacyFields.find(f=>f[0]===k)[1]+'ไม่ตรงรายการที่ตั้งไว้: '+p[k]);
+  for(const k of ['position','status','academic_rank'])if(p[k]&&lookups.length&&!personnelOptions(k,lookups).includes(p[k]))throw Error(legacyFields.find(f=>f[0]===k)[1]+'ไม่ตรงรายการที่ตั้งไว้: '+p[k]);
   records.push(p);preview.push({row:i+2,person:p});
  }catch(e){errors.push('แถว '+(i+2)+': '+e.message);}});
  if(!nonblank.length)errors.push('ยังไม่มีรายชื่อ กรุณากรอกชีต บุคลากร ตั้งแต่แถว 2');return {errors,warnings,records,preview};

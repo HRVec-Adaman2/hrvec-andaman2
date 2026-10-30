@@ -1,0 +1,27 @@
+// Isolated PostgreSQL verification of photos and anonymous aggregates; no production records.
+import fs from 'node:fs/promises';import assert from 'node:assert/strict';
+const {PGlite}=await import(process.env.HR_PGLITE_MODULE||'@electric-sql/pglite');
+const schema=await fs.readFile(new URL('../supabase/schema.sql',import.meta.url),'utf8'),patch=await fs.readFile(new URL('../supabase/upgrade-v1.11.sql',import.meta.url),'utf8');
+const previous=await fs.readFile(new URL('./v110-db.mjs',import.meta.url),'utf8');
+const fixture=previous.match(/const fixture=`([^`]+)`;/)[1];
+const admin='00000000-0000-0000-0000-000000000001',staff='00000000-0000-0000-0000-000000000002',other='00000000-0000-0000-0000-000000000003';
+const db=new PGlite();let checks=0;const eq=(a,b)=>{assert.deepEqual(a,b);checks++;},ok=a=>{assert.ok(a);checks++;},deny=async p=>{await assert.rejects(p);checks++;};
+await db.exec(fixture);await db.exec(schema.slice(0,schema.indexOf('-- HRVec-Andaman2 1.11.')));
+await db.exec(`insert into auth.users values('${admin}'),('${staff}'),('${other}');update public.profiles set must_change_password=false;update public.profiles set role='admin' where id='${admin}';insert into public.personnel(employee_code,full_name,school_id,user_id,email) values('PRIVATE1','PRIVATE-ONE',1,'${staff}','private@example.com'),('PRIVATE2','PRIVATE-TWO',2,'${other}','other@example.com');`);
+const before=(await db.query('select md5(string_agg(to_jsonb(p)::text,\'|\' order by id)) hash from public.personnel p')).rows[0].hash;
+await db.exec(patch);await db.exec(patch);
+eq((await db.query('select public.hr_schema_version() v')).rows[0].v,'1.11.0');eq((await db.query('select md5(string_agg(to_jsonb(p)::text,\'|\' order by id)) hash from public.personnel p')).rows[0].hash,before);
+const rows=(await db.query('select id,revision,user_id from public.personnel order by employee_code')).rows,own=rows[0],foreign=rows[1];
+async function as(id){await db.exec('reset role');const sid=crypto.randomUUID();await db.query('insert into auth.sessions(id,user_id) values($1,$2)',[sid,id]);await db.query("select set_config('request.jwt.claim.sub',$1,false),set_config('request.jwt.claim.role','authenticated',false),set_config('request.jwt.claims',$2,false)",[id,JSON.stringify({sub:id,role:'authenticated',session_id:sid})]);await db.exec('set role authenticated');}
+const save=async(p,revision)=>(await db.query('select public.save_personnel_reviewed($1::jsonb,null,$2::integer,$3) p',[JSON.stringify(p),revision,'เจ้าของข้อมูลปรับปรุงรูปถ่าย'])).rows[0].p;
+await as(staff);const photo='data:image/png;base64,aGVsbG8=';
+const updated=await save({id:own.id,avatar_data:photo},1);eq(updated.revision,2);eq((await db.query('select avatar_data from public.personnel where id=$1',[own.id])).rows[0].avatar_data,photo);
+await deny(save({id:foreign.id,avatar_data:photo},1));await deny(save({id:own.id,position:'ผู้อำนวยการ'},2));eq((await db.query('select count(*)::int n from public.personnel')).rows[0].n,1);
+await as(admin);const history=(await db.query('select old_data,new_data from public.personnel_changes where personnel_id=$1 and revision=2',[own.id])).rows;ok(history.length===1);ok(!JSON.stringify(history).includes('data:image/'));ok(!JSON.stringify(history).includes('aGVsbG8='));
+await db.exec('reset role');await db.query("insert into public.certificates(personnel_id,kind,name,issuer,number) values($1,'competency','PRIVATE-CERTIFICATE','PRIVATE-ISSUER','')",[own.id]);await db.exec('set role anon');
+const overview=(await db.query('select public.hr_public_overview() s')).rows[0].s;eq(overview.total,2);eq(overview.certificates,1);eq(overview.schools.reduce((sum,s)=>sum+s.count,0),2);eq(overview.degrees,[]);eq(overview.issuers,[]);ok(!JSON.stringify(overview).includes('PRIVATE'));ok(!JSON.stringify(overview).includes('@example.com'));
+await deny(db.query('select * from public.personnel'));await deny(db.query('select avatar_data from public.personnel'));await deny(db.query('select * from public.certificates'));await deny(db.query('select public.hr_overview()'));await deny(db.query('select public.write_personnel_internal($1::jsonb,null)',[JSON.stringify({id:own.id,avatar_data:null})]));
+await db.exec('reset role');eq((await db.query("select bool_and(relrowsecurity) b from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relname in ('personnel','certificates','profiles','schools')")).rows[0].b,true);eq((await db.query("select prosecdef from pg_proc where oid='public.hr_public_overview()'::regprocedure")).rows[0].prosecdef,false);
+await as(staff);await save({id:own.id,avatar_data:null},2);eq((await db.query('select avatar_data from public.personnel where id=$1',[own.id])).rows[0].avatar_data,null);await db.close();
+const fresh=new PGlite();await fresh.exec(fixture);await fresh.exec(schema);eq((await fresh.query('select public.hr_schema_version() v')).rows[0].v,'1.11.0');await fresh.close();
+console.log(JSON.stringify({checks,result:'passed',covered:['public aggregates without personal data','private photos','own-photo permissions','cross-person denial','photo removal','image-free history','RLS','idempotent upgrade','fresh installation']}));

@@ -1,5 +1,7 @@
 // Workbook API used by the app, backed by the locally shipped ExcelJS browser build.
 // Formula cells are preserved as metadata so the importer can reject them.
+import {templateValidations} from './template.js';
+import {normalizedDate,excelBuddhistFormat} from './dates.js';
 const address=(r,c)=>{let letters='';for(let n=c+1;n;n=Math.floor((n-1)/26))letters=String.fromCharCode(65+(n-1)%26)+letters;return letters+(r+1);};
 const position=s=>{const m=/^([A-Z]+)([1-9]\d*)$/i.exec(s);if(!m)throw Error('ขอบเขต Excel ไม่ถูกต้อง');let c=0;for(const x of m[1].toUpperCase())c=c*26+x.charCodeAt(0)-64;return {r:+m[2]-1,c:c-1};};
 export function normalizeXlsx(data,zip){
@@ -39,6 +41,17 @@ export function workbookAPI(ExcelJS,saveFile,zip=typeof window!=='undefined'?win
     ws.getRow(1).eachCell(cell=>{cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF315B91'}};cell.alignment={vertical:'middle',wrapText:true};});
     if(source['!cols'])ws.columns.forEach((col,i)=>{col.width=source['!cols'][i]?.wch||22;});
     for(let i=2;i<=Math.max(ws.rowCount,200);i++){const row=ws.getRow(i);if(i<=ws.rowCount){row.font={name:'Tahoma',size:11};row.alignment={vertical:'top',wrapText:true};}if(['บุคลากร','ใบรับรองวิชาชีพ'].includes(name)){for(let c=1;c<=rows[0].length;c++)row.getCell(c).numFmt='@';}}
+    if(['บุคลากร','ใบรับรองวิชาชีพ'].includes(name)){
+     const refRows=utils.sheet_to_json(book.Sheets['รายการอ้างอิง']||{}),units=refRows.slice(1).filter(r=>typeof r[0]==='number').length||8;
+     for(const rule of templateValidations(name,units))ws.dataValidations.add(rule.range,{type:rule.type,formulae:[rule.formula],allowBlank:true,showErrorMessage:rule.strict||rule.type==='custom',errorStyle:'stop',errorTitle:'ข้อมูลไม่ตรงรูปแบบ',error:rule.type==='custom'?'กรอกวันที่ วว/ดด/ปี พ.ศ. 4 หลัก':'เลือกรายการจากข้อมูลอ้างอิง',showInputMessage:true,promptTitle:rule.label,prompt:rule.type==='custom'?'วว/ดด/ปี พ.ศ. เช่น 29/10/2569':rule.strict?'เลือกจากรายการอ้างอิง':'เลือกจากรายการหรือกรอกข้อความเพิ่มเติม'});
+     ws.autoFilter={from:{row:1,column:1},to:{row:1,column:rows[0].length}};
+    }
+    if(['บุคลากร','ใบรับรองวิชาชีพ','ตัวอย่าง','ตัวอย่างใบรับรอง'].includes(name)){
+     const labels=rows[0]||[];for(const label of ['วันเกิด','วันเริ่มงาน','วันที่ออก','วันหมดอายุ']){
+      const col=labels.indexOf(label)+1;if(!col)continue;ws.getColumn(col).width=24;ws.getColumn(col).numFmt='@';
+      for(let r=2;r<=rows.length;r++){const cell=ws.getCell(r,col);if(cell.value!==''&&cell.value!=null){cell.value=new Date(normalizedDate(cell.value)+'T00:00:00Z');cell.numFmt=excelBuddhistFormat;}}
+     }
+    }
    }
    const bytes=await output.xlsx.writeBuffer();await saveFile(new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),name);
   }

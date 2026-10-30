@@ -6,7 +6,7 @@ globalThis.document={body:node(),querySelector:s=>{if(!elements.has(s))elements.
 globalThis.window={HR_CONFIG:{},innerWidth:390,matchMedia:()=>({matches:false}),addEventListener:(name,fn)=>windowHandlers.set(name,fn)};
 globalThis.localStorage={getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)};
 globalThis.location={hash:'#dashboard',reload(){}};globalThis.history={replaceState:(_s,_t,hash)=>location.hash=hash,pushState:(_s,_t,hash)=>location.hash=hash};
-await import('../dist/app.js');await new Promise(resolve=>setTimeout(resolve,0));
+await import('../dist/app.js');const api=await import('../dist/api.js');await new Promise(resolve=>setTimeout(resolve,0));
 const html=()=>elements.get('#main').innerHTML;
 const navigate=hash=>{location.hash=hash;return windowHandlers.get('hashchange')();};
 const click=dataset=>handlers.get('click')({preventDefault(){},target:{closest:selector=>selector==='[data-action]'?{dataset,disabled:false}:null}});
@@ -14,7 +14,7 @@ test('overview links lead to personnel, certificate and each school breakdown',(
  assert.doesNotMatch(html(),/บุคลากรตัวอย่าง|name="password"/);assert.match(html(),/ข้อมูลใบรับรองวิชาชีพ/);assert.match(html(),/href="#personnel\?school=1"/);assert.match(html(),/href="#personnel\?school=7"/);assert.match(html(),/href="#certificates\?status=expiring"/);
 });
 test('direct detail links require confirmation, and demo access is explicitly labelled',async()=>{
- await navigate('#personnel?school=2');assert.match(html(),/ข้อมูลส่วนบุคคลถูกจำกัดสิทธิ์/);assert.doesNotMatch(html(),/บุคลากรตัวอย่าง/);assert.match(elements.get('#modalbody').innerHTML,/รหัสผ่าน admin/);assert.match(elements.get('#modalbody').innerHTML,/ยังไม่ได้เปิดใช้งานบัญชีผู้ดูแลระบบจริง/);await click({action:'demoaccess'});assert.match(html(),/บุคลากรตัวอย่าง 2/);assert.doesNotMatch(html(),/บุคลากรตัวอย่าง 1<\//);assert.match(html(),/value="2" selected/);assert.match(html(),/วุฒิสูงสุด/);
+ await navigate('#personnel?school=2');assert.match(html(),/ข้อมูลส่วนบุคคลถูกจำกัดสิทธิ์/);assert.doesNotMatch(html(),/บุคลากรตัวอย่าง/);assert.match(elements.get('#modalbody').innerHTML,/เข้าสู่ระบบเพื่อเปิดข้อมูล/);assert.match(elements.get('#modalbody').innerHTML,/ยังไม่ได้เปิดใช้งานบัญชีผู้ดูแลระบบจริง/);await click({action:'demoaccess'});assert.match(html(),/บุคลากรตัวอย่าง 2/);assert.doesNotMatch(html(),/บุคลากรตัวอย่าง 1<\//);assert.match(html(),/value="2" selected/);assert.match(html(),/วุฒิสูงสุด/);
 });
 test('certificate issuer drilldown reaches certificate details',async()=>{
  await navigate('#certificates?issuer='+encodeURIComponent('ข้อมูลสาธิต'));assert.match(html(),/ใบอนุญาตประกอบวิชาชีพผู้บริหารสถานศึกษา/);
@@ -55,9 +55,9 @@ test('skip to content keeps the current route',async()=>{
  await navigate('#personnel?school=2');await click({action:'skipcontent'});assert.equal(location.hash,'#personnel?school=2');assert.equal(document.activeElement,elements.get('#main-content'));
 });
 
-test('each overview selection opens the admin prompt before changing the route',async()=>{
+test('guest overview selections require login before changing the route',async()=>{api.lockDetails();
  await navigate('#dashboard');const before=location.hash;let prevented=false;
  await handlers.get('click')({preventDefault(){prevented=true;},target:{closest:selector=>selector==='#main a[href^="#"]'?{getAttribute:()=> '#certificates?status=expiring'}:null}});
- assert.equal(prevented,true);assert.equal(location.hash,before);assert.match(elements.get('#modalbody').innerHTML,/ยืนยันสิทธิ์ผู้ดูแลระบบ/);assert.doesNotMatch(html(),/บุคลากรตัวอย่าง/);
+ assert.equal(prevented,true);assert.equal(location.hash,before);assert.match(elements.get('#modalbody').innerHTML,/เข้าสู่ระบบเพื่อเปิดข้อมูล/);assert.doesNotMatch(html(),/บุคลากรตัวอย่าง/);
  await click({action:'close'});assert.equal(elements.get('#modal').open,false);assert.equal(location.hash,before);
 });

@@ -18,15 +18,16 @@ globalThis.fetch=async(url,options)=>{
  }else if(path==='/rest/v1/rpc/record_admin_access'){
   assert.equal(options.headers.Authorization,'Bearer candidate-token');
   if(!auditAvailable){status=404;result={message:'Function missing'};}
- }else if(path==='/rest/v1/rpc/hr_overview')result={total:2,schools:[],degrees:[],issuers:[]};
+ }else if(path==='/rest/v1/rpc/hr_public_overview')result={public:true,total:2,schools:[],degrees:[],issuers:[]};
+ else if(path==='/rest/v1/rpc/hr_overview')result={total:2,schools:[],degrees:[],issuers:[]};
  else if(path==='/rest/v1/personnel')result=[];
  return {ok:status<400,status,text:async()=>JSON.stringify(result)};
 };
 const api=await import('../dist/api.js');
 
 test('configured app starts locked and anonymous requests never fetch personnel',async()=>{
- assert.equal(api.session().mode,'guest');assert.equal(await api.overview(),null);
- await assert.rejects(api.all('personnel'),/ยืนยัน/);assert.equal(calls.length,0);assert.throws(()=>api.openDemoDetails(),/สาธิต/);
+ assert.equal(api.session().mode,'guest');assert.equal((await api.overview()).public,true);
+ await assert.rejects(api.all('personnel'),/ยืนยัน/);assert.equal(calls.length,1);assert.equal(calls[0].path,'/rest/v1/rpc/hr_public_overview');assert.equal(calls[0].options.headers.Authorization,undefined);assert.throws(()=>api.openDemoDetails(),/สาธิต/);
 });
 test('wrong password and non-admin accounts cannot unlock admin views',async()=>{
  passwordAccepted=false;await assert.rejects(api.verifyAdmin('test@example.com','wrong'));assert.equal(api.session().mode,'guest');
@@ -50,4 +51,8 @@ test('staff identity survives a rejected admin confirmation; logout removes acce
  candidateRole='personnel';await api.login('staff@example.com','test-password');
  await assert.rejects(api.verifyAdmin('staff@example.com','test-password'),/ผู้ดูแล/);assert.equal(api.session().role,'personnel');assert.equal(api.session().email,'staff@example.com');
  await api.logout();assert.equal(api.session().mode,'guest');assert.equal(api.session().email,'');await assert.rejects(api.all('personnel'));
+});
+test('detail login accepts each assigned role and rejects an unknown role without granting access',async()=>{
+ for(const assigned of ['personnel','school_editor','admin']){candidateRole=assigned;await api.unlockDetails('test@example.com','test-password');assert.equal(api.session().role,assigned);assert.equal(api.canReadDetails(),true);await api.logout();}
+ candidateRole='unexpected';await assert.rejects(api.unlockDetails('test@example.com','test-password'),/สิทธิ์/);assert.equal(api.session().mode,'guest');assert.equal(api.canReadDetails(),false);
 });

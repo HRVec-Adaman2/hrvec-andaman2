@@ -1230,3 +1230,99 @@ create or replace function public.hr_schema_version() returns text language sql 
 revoke all on function public.hr_schema_version() from public,anon;
 grant execute on function public.hr_schema_version() to authenticated,service_role;
 commit;
+
+-- HRVec-Andaman2 1.10 additive upgrade from 1.9. Run this file in SQL Editor.
+-- Does not reset accounts, delete personnel, import the attached workbook, or modify RLS.
+begin;
+do $$begin
+ if public.hr_schema_version() not in ('1.9.0','1.10.0') then
+  raise exception 'กรุณาอัปเกรดฐานข้อมูลเป็นรุ่น 1.9 ก่อน';
+ end if;
+end $$;
+alter table public.personnel add column if not exists university_rank text not null default '';
+alter table public.personnel add column if not exists administration_field text not null default '';
+alter table public.personnel drop constraint if exists personnel_university_rank_check;
+alter table public.personnel add constraint personnel_university_rank_check check(university_rank in ('','อาจารย์','ผู้ช่วยศาสตราจารย์','รองศาสตราจารย์','ศาสตราจารย์'));
+alter table public.personnel drop constraint if exists personnel_administration_field_check;
+alter table public.personnel add constraint personnel_administration_field_check check(length(administration_field)<=200);
+alter table public.lookups drop constraint if exists lookups_category_check;
+alter table public.lookups add constraint lookups_category_check check(category in ('position','status','department','institute_department','academic_rank','administration_field'));
+insert into public.lookups(category,name) select 'position',unnest(array['อาจารย์','พนักงานบริหารงานทั่วไป']) on conflict do nothing;
+insert into public.lookups(category,name) select 'administration_field',unnest(array['บริหารงานบุคคล','การเงินและบัญชี','พัสดุ','แผนงานและงบประมาณ','เทคโนโลยีสารสนเทศ','สารบรรณและธุรการ','ประสานงานและความร่วมมือ']) on conflict do nothing;
+
+create or replace function public.write_personnel_internal(personnel_data jsonb,certificate_data jsonb default null)
+returns jsonb language plpgsql security definer set search_path='' as $$
+declare current_person public.personnel; candidate public.personnel; certificate_id uuid; k text;
+begin
+ if jsonb_typeof(personnel_data) is distinct from 'object' then raise exception 'ข้อมูลบุคลากรไม่ถูกต้อง';end if;
+ for k in select jsonb_object_keys(personnel_data) loop
+  if not (k=any(array['id','employee_code','full_name','school_id','user_id','position','status','department','work_unit','university_rank','administration_field','academic_rank','highest_education','education_majors','birth_date','start_date','retirement_override','email','phone','avatar_data'])) then raise exception 'ไม่รองรับฟิลด์ %',k;end if;
+ end loop;
+ if personnel_data ? 'id' then
+  select * into current_person from public.personnel where id=(personnel_data->>'id')::uuid for update;
+  if not found or current_person.deleted_at is not null then raise exception 'ไม่พบข้อมูลบุคลากรที่ใช้งานอยู่';end if;
+  candidate=jsonb_populate_record(current_person,personnel_data-'id');
+  update public.personnel set employee_code=candidate.employee_code,full_name=candidate.full_name,school_id=candidate.school_id,user_id=candidate.user_id,
+   position=candidate.position,status=candidate.status,department=candidate.department,work_unit=candidate.work_unit,university_rank=candidate.university_rank,administration_field=candidate.administration_field,academic_rank=candidate.academic_rank,
+   highest_education=candidate.highest_education,education_majors=candidate.education_majors,birth_date=candidate.birth_date,start_date=candidate.start_date,retirement_override=candidate.retirement_override,
+   email=candidate.email,phone=candidate.phone,avatar_data=candidate.avatar_data where id=current_person.id returning * into current_person;
+ else
+  candidate=jsonb_populate_record(null::public.personnel,personnel_data);
+  insert into public.personnel(employee_code,full_name,school_id,user_id,position,status,department,work_unit,university_rank,administration_field,academic_rank,highest_education,education_majors,birth_date,start_date,retirement_override,email,phone,avatar_data)
+   values(candidate.employee_code,candidate.full_name,candidate.school_id,candidate.user_id,coalesce(candidate.position,'ครู'),coalesce(candidate.status,'ปฏิบัติงาน'),coalesce(candidate.department,''),coalesce(candidate.work_unit,''),coalesce(candidate.university_rank,''),coalesce(candidate.administration_field,''),coalesce(candidate.academic_rank,''),coalesce(candidate.highest_education,''),coalesce(candidate.education_majors,'{}'),candidate.birth_date,candidate.start_date,candidate.retirement_override,coalesce(candidate.email,''),coalesce(candidate.phone,''),candidate.avatar_data) returning * into current_person;
+ end if;
+ if certificate_data is not null and certificate_data<>'null'::jsonb then
+  if jsonb_typeof(certificate_data) is distinct from 'object' then raise exception 'ข้อมูลใบรับรองไม่ถูกต้อง';end if;
+  if exists(select 1 from jsonb_object_keys(certificate_data) as ck(key) where ck.key not in ('kind','name','issuer','number','issued_on','expires_on','occupation','competency_level','standard')) then raise exception 'ไม่รองรับฟิลด์ใบรับรอง';end if;
+  insert into public.certificates(personnel_id,kind,name,number,issuer,issued_on,expires_on,occupation,competency_level,standard)
+   values(current_person.id,certificate_data->>'kind',trim(certificate_data->>'name'),coalesce(certificate_data->>'number',''),trim(certificate_data->>'issuer'),nullif(certificate_data->>'issued_on','')::date,nullif(certificate_data->>'expires_on','')::date,coalesce(trim(certificate_data->>'occupation'),''),coalesce(trim(certificate_data->>'competency_level'),''),coalesce(trim(certificate_data->>'standard'),'')) returning id into certificate_id;
+ end if;
+ return jsonb_build_object('id',current_person.id,'revision',current_person.revision,'certificate_id',certificate_id);
+end $$;
+
+-- The existing internal writer remains inaccessible to API users.
+revoke all on function public.write_personnel_internal(jsonb,jsonb) from public,anon,authenticated;
+create or replace function public.hr_schema_version() returns text language sql immutable security invoker set search_path='' as $$select '1.10.0'::text$$;
+revoke all on function public.hr_schema_version() from public,anon;
+grant execute on function public.hr_schema_version() to authenticated,service_role;
+notify pgrst, 'reload schema';
+commit;
+
+-- HRVec-Andaman2 1.11. Public aggregate counts only; personnel RLS is unchanged.
+begin;
+do $$begin
+ if public.hr_schema_version() not in ('1.10.0','1.11.0') then raise exception 'กรุณาอัปเกรดฐานข้อมูลเป็นรุ่น 1.10 ก่อน';end if;
+end $$;
+-- This schema is NOT added to the Data API exposed schemas.
+create schema if not exists hr_public_stats;
+revoke all on schema hr_public_stats from public;
+grant usage on schema hr_public_stats to anon,authenticated,service_role;
+create or replace function hr_public_stats.snapshot() returns jsonb
+language sql stable security definer set search_path='' as $$
+ with active_people as (select id,school_id,position,highest_education from public.personnel where deleted_at is null),
+ active_certs as (select c.personnel_id,c.kind,c.expires_on from public.certificates c join active_people p on p.id=c.personnel_id),
+ active_docs as (select d.personnel_id,d.type_id,d.status from public.documents d join active_people p on p.id=d.personnel_id),
+ config as (select coalesce((select expiry_days from public.settings where id=1),90) as days,(now() at time zone 'Asia/Bangkok')::date as asof),
+ scores as (select p.id,count(t.id) as total,count(t.id) filter(where exists(select 1 from active_docs d where d.personnel_id=p.id and d.type_id=t.id and d.status='approved')) as done
+  from active_people p left join public.document_types t on t.required and (cardinality(t.positions)=0 or p.position=any(t.positions)) group by p.id),
+ school_counts as (select s.id,s.name,s.province,s.unit_type,count(p.id) as count from public.schools s left join active_people p on p.school_id=s.id
+  where s.is_active or exists(select 1 from active_people ap where ap.school_id=s.id) group by s.id,s.name,s.province,s.unit_type)
+ select jsonb_build_object('public',true,'expiryDays',config.days,'total',(select count(*) from active_people),'certificates',(select count(*) from active_certs),'holders',(select count(distinct personnel_id) from active_certs),'competency',(select count(*) from active_certs where kind='competency'),
+ 'schools',coalesce((select jsonb_agg(to_jsonb(s) order by s.id) from school_counts s),'[]'::jsonb),
+ 'degrees','[]'::jsonb,'issuers','[]'::jsonb,
+ 'expiring',(select count(*) from active_certs where expires_on between config.asof and config.asof+config.days),'expired',(select count(*) from active_certs where expires_on<config.asof),
+ 'pending',(select count(*) from active_docs where status='pending'),'missingEducation',(select count(*) from active_people where nullif(trim(highest_education),'') is null),
+ 'incomplete',(select count(*) from scores where done<total),'required',coalesce((select sum(total) from scores),0),'done',coalesce((select sum(done) from scores),0)) from config;
+$$;
+revoke all on function hr_public_stats.snapshot() from public;
+grant execute on function hr_public_stats.snapshot() to anon,authenticated,service_role;
+create or replace function public.hr_public_overview() returns jsonb
+language sql stable security invoker set search_path='' as $$select hr_public_stats.snapshot()$$;
+revoke all on function public.hr_public_overview() from public;
+grant execute on function public.hr_public_overview() to anon,authenticated,service_role;
+comment on function public.hr_public_overview() is 'Public totals and institution counts. No names, identifiers, photos, contact information, certificate details, or document links.';
+create or replace function public.hr_schema_version() returns text language sql immutable security invoker set search_path='' as $$select '1.11.0'::text$$;
+revoke all on function public.hr_schema_version() from public,anon;
+grant execute on function public.hr_schema_version() to authenticated,service_role;
+notify pgrst,'reload schema';
+commit;

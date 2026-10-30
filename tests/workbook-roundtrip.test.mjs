@@ -33,3 +33,13 @@ test('downloaded Thai templates round-trip through the application reader with c
 test('oversized ZIP entries are rejected before allocating their uncompressed size',()=>{
  const bytes=window.fflate.zipSync({'big.xml':new Uint8Array([1,2,3])});let offset=-1;for(let i=0;i<bytes.length-4;i++)if(bytes[i]===80&&bytes[i+1]===75&&bytes[i+2]===1&&bytes[i+3]===2){offset=i;break;}assert.ok(offset>=0);new DataView(bytes.buffer).setUint32(offset+24,60*1024*1024,true);assert.throws(()=>normalizeXlsx(bytes,window.fflate),/ใหญ่เกินกำหนด/);
 });
+test('the distributed template carries native dropdowns, dependent departments and Buddhist date formats',async()=>{
+ const bytes=fs.readFileSync('dist/HRVec-Andaman2-Personnel-Template.xlsx'),wb=new ExcelJS.Workbook();await wb.xlsx.load(normalizeXlsx(bytes,window.fflate));
+ const p=wb.getWorksheet('บุคลากร'),c=wb.getWorksheet('ใบรับรองวิชาชีพ');assert.equal(p.getCell('N1').value,'ตำแหน่งทางวิชาการ');assert.equal(p.getCell('O1').value,'ด้านงานบริหารทั่วไป');
+ assert.equal(p.getCell('N501').dataValidation.type,'list');assert.match(p.getCell('N2').dataValidation.formulae[0],/รายการอ้างอิง/);
+ assert.match(p.getCell('E2').dataValidation.formulae[0],/VLOOKUP/);assert.match(c.getCell('A5001').dataValidation.formulae[0],/บุคลากร/);
+ assert.equal(p.getCell('H2').numFmt,'@');assert.equal(wb.getWorksheet('ตัวอย่าง').getCell('H2').numFmt,'[$-th-TH]dd/mm/bbbb');
+ assert.equal(wb.getWorksheet('ตัวอย่าง').getCell('H2').value.toISOString().slice(0,10),'1985-05-15');
+ const imported=await readImportFile({name:'blank.xlsx',size:bytes.length,arrayBuffer:async()=>bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength)},xlsx);
+ assert.equal(imported.matrix.slice(1).filter(r=>r.some(v=>v!==''&&v!=null)).length,0);
+});

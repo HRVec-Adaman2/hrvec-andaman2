@@ -25,7 +25,7 @@ async function fixture(code){
 async function inspect(file){const error=node(),button=node();await handlers.get('submit')({preventDefault(){},target:{id:'importform',values:[['file',file]],querySelector:s=>s==='#formerror'?error:s==='[type=submit],button.primary'?button:null}});assert.equal(error.textContent,'');}
 
 test('import form describes the exact Thai template and keeps status and address inputs absent',async()=>{
- api.openDemoDetails();await navigate();await click({action:'import'});assert.match(modal(),/แม่แบบรุ่น 1.8 ที่ปรับล่าสุด/);assert.match(modal(),/บุคลากร 13 ช่อง/);assert.match(modal(),/ใบรับรอง 10 ช่อง/);assert.match(modal(),/มาตรฐานอ้างอิง/);assert.doesNotMatch(modal(),/name="(?:status|address)"/);
+ api.openDemoDetails();await navigate();await click({action:'import'});assert.match(modal(),/แม่แบบรุ่น 1.10/);assert.match(modal(),/บุคลากร 15 ช่อง/);assert.match(modal(),/ใบรับรอง 10 ช่อง/);assert.doesNotMatch(modal(),/templatehelp|importsteps|วิธีกรอก/);assert.doesNotMatch(modal(),/name="(?:status|address)"/);
 });
 test('a real XLSX reaches a complete escaped preview and only commits linked records after confirmation',async()=>{
  const before=(await api.all('personnel')).length;await inspect(await fixture('000UI123'));
