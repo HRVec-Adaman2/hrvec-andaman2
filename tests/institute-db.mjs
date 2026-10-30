@@ -1,3 +1,4 @@
+import {signInAs} from './helpers/auth-session.mjs';
 // Real PostgreSQL semantics in an isolated database; never modifies production accounts.
 process.on('uncaughtException',e=>{console.error(e.message);console.error(e.where||'');process.exit(1);});
 import fs from 'node:fs/promises';import assert from 'node:assert/strict';
@@ -15,7 +16,7 @@ const schools=(await db.query('select * from public.schools order by id')).rows,
 const old=(await db.query("select * from public.personnel where employee_code='LEGACY'")).rows[0];eq(old.department,'ฝ่ายยุทธศาสตร์และแผนงาน');eq(old.education_majors,['สาขาเดิม']);eq(Object.hasOwn(old,'address'),false);eq((await db.query("select count(*)::int n from public.personnel_changes where old_data ? 'address' or new_data ? 'address'")).rows[0].n,0);eq((await db.query("select count(*)::int n from public.lookups where category='institute_department'")).rows[0].n,5);
 const admin='00000000-0000-0000-0000-000000000001',editor='00000000-0000-0000-0000-000000000002',staff='00000000-0000-0000-0000-000000000003';
 await db.exec(`insert into auth.users values('${admin}'),('${editor}'),('${staff}');update public.profiles set must_change_password=false;update public.profiles set role='admin' where id='${admin}';`);
-async function as(id){await db.exec('reset role');const sid=crypto.randomUUID();await db.query('insert into auth.sessions(id,user_id) values($1,$2)',[sid,id]);await db.query("select set_config('request.jwt.claim.sub',$1,false),set_config('request.jwt.claim.role','authenticated',false),set_config('request.jwt.claims',$2,false)",[id,JSON.stringify({sub:id,role:'authenticated',session_id:sid})]);await db.exec('set role authenticated');}
+const as=id=>signInAs(db,id);
 const rpc=async(name,args=[],casts=[]) =>(await db.query(`select public.${name}(${args.map((_,i)=>'$'+(i+1)+(casts[i]?'::'+casts[i]:'')).join(',')}) as x`,args.map((a,i)=>casts[i]==='jsonb'?JSON.stringify(a):a))).rows[0].x;
 const save=(p,rev=null,cert=null)=>rpc('save_personnel_reviewed',[p,cert,rev,'ตรวจสอบและปรับปรุงทะเบียน'],['jsonb','jsonb','int','text']);const person=(code,s=1,more={})=>({employee_code:code,full_name:'บุคลากร '+code,school_id:s,...more});
 const cert={kind:'competency',name:'คุณวุฒิวิชาชีพ',issuer:'หน่วยรับรองทดสอบ',number:'0000123',occupation:'เทคโนโลยีสารสนเทศ',competency_level:'ระดับ 4',standard:'มาตรฐานอาชีพ',issued_on:'2025-01-01',expires_on:'2028-01-01'};

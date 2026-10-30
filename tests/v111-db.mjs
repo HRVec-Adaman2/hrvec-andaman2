@@ -1,3 +1,4 @@
+import {signInAs} from './helpers/auth-session.mjs';
 // Isolated PostgreSQL verification of photos and anonymous aggregates; no production records.
 import fs from 'node:fs/promises';import assert from 'node:assert/strict';
 const {PGlite}=await import(process.env.HR_PGLITE_MODULE||'@electric-sql/pglite');
@@ -12,7 +13,7 @@ const before=(await db.query('select md5(string_agg(to_jsonb(p)::text,\'|\' orde
 await db.exec(patch);await db.exec(patch);
 eq((await db.query('select public.hr_schema_version() v')).rows[0].v,'1.11.0');eq((await db.query('select md5(string_agg(to_jsonb(p)::text,\'|\' order by id)) hash from public.personnel p')).rows[0].hash,before);
 const rows=(await db.query('select id,revision,user_id from public.personnel order by employee_code')).rows,own=rows[0],foreign=rows[1];
-async function as(id){await db.exec('reset role');const sid=crypto.randomUUID();await db.query('insert into auth.sessions(id,user_id) values($1,$2)',[sid,id]);await db.query("select set_config('request.jwt.claim.sub',$1,false),set_config('request.jwt.claim.role','authenticated',false),set_config('request.jwt.claims',$2,false)",[id,JSON.stringify({sub:id,role:'authenticated',session_id:sid})]);await db.exec('set role authenticated');}
+const as=id=>signInAs(db,id);
 const save=async(p,revision)=>(await db.query('select public.save_personnel_reviewed($1::jsonb,null,$2::integer,$3) p',[JSON.stringify(p),revision,'เจ้าของข้อมูลปรับปรุงรูปถ่าย'])).rows[0].p;
 await as(staff);const photo='data:image/png;base64,aGVsbG8=';
 const updated=await save({id:own.id,avatar_data:photo},1);eq(updated.revision,2);eq((await db.query('select avatar_data from public.personnel where id=$1',[own.id])).rows[0].avatar_data,photo);

@@ -1,3 +1,4 @@
+import {signInAs} from './helpers/auth-session.mjs';
 // Isolated PostgreSQL integration checks; no production users or records are created.
 import fs from 'node:fs/promises';import assert from 'node:assert/strict';
 process.on('uncaughtException',e=>{console.error(e.message);console.error(e.stack?.split('\n').slice(-5).join('\n'));process.exit(1);});
@@ -10,13 +11,27 @@ await db.exec(`create role anon;create role authenticated;create role service_ro
 const base=schema.split('-- HRVec-Andaman2 1.8. Upgrade')[0];await db.exec(base);
 await db.exec(`insert into auth.users values('${admin}'),('${editor}'),('${staff}'),('${outsider}');update public.profiles set must_change_password=false;update public.profiles set role='admin' where id='${admin}';`);
 await db.exec(migration);await db.exec(migration);eq((await db.query('select count(*)::int n from public.schools')).rows[0].n,7);
-async function as(id){await db.exec('reset role');const sid=crypto.randomUUID();await db.query('insert into auth.sessions(id,user_id) values($1,$2)',[sid,id]);await db.query("select set_config('request.jwt.claim.sub',$1,false),set_config('request.jwt.claim.role','authenticated',false),set_config('request.jwt.claims',$2,false)",[id,JSON.stringify({sub:id,role:'authenticated',session_id:sid})]);await db.exec('set role authenticated');}
+const as=id=>signInAs(db,id);
 const rpc=async(name,args=[],casts=[]) =>(await db.query(`select public.${name}(${args.map((_,i)=>'$'+(i+1)+(casts[i]?'::'+casts[i]:'')).join(',')}) as x`,args.map((a,i)=>casts[i]==='jsonb'?JSON.stringify(a):a))).rows[0].x;
 const save=(p,rev=null,cert=null)=>rpc('save_personnel_reviewed',[p,cert,rev,'ตรวจสอบและปรับปรุงข้อมูล'],['jsonb','jsonb','int','text']);
 const school=(op,row,rev=null)=>rpc('manage_school',[op,row,rev,'ปรับปรุงข้อมูลสถานศึกษา'],['text','jsonb','int','text']);
 const assignment=(data,rev=null,remove=false)=>rpc('manage_school_assignment',[data,rev,remove,'มอบหมายงานตามหน้าที่'],['jsonb','int','boolean','text']);
 const count=async table=>(await db.query(`select count(*)::int n from public.${table}`)).rows[0].n;
 const person=(code,school_id=1,user_id=null)=>({employee_code:code,full_name:'บุคลากร '+code,school_id,...(user_id?{user_id}:{})});
+// Regression: a session created at the revocation boundary must stay blocked.
+await db.exec('reset role');
+const boundarySession=crypto.randomUUID();
+await db.query('update public.profiles set sessions_revoked_before=clock_timestamp() where id=$1',[editor]);
+await db.query('insert into auth.sessions(id,user_id,created_at) select $1,$2,sessions_revoked_before from public.profiles where id=$2',[boundarySession,editor]);
+await db.query("select set_config('request.jwt.claim.sub',$1,false),set_config('request.jwt.claim.role','authenticated',false),set_config('request.jwt.claims',$2,false)",[editor,JSON.stringify({sub:editor,role:'authenticated',session_id:boundarySession})]);
+await db.exec('set role authenticated');eq(await rpc('account_ready'),false);
+// Force the test helper to wait for an actual later clock value; never invent
+// a future session timestamp or make the production comparison less strict.
+await db.exec('reset role');await db.query("update public.profiles set sessions_revoked_before=clock_timestamp()+interval '100 milliseconds' where id=$1",[editor]);
+const freshSession=await as(editor);eq(await rpc('account_ready'),true);
+await db.exec('reset role');eq((await db.query('select s.created_at>p.sessions_revoked_before later from auth.sessions s join public.profiles p on p.id=s.user_id where s.id=$1',[freshSession])).rows[0].later,true);
+await db.query("select set_config('request.jwt.claims',$1,false)",[JSON.stringify({sub:editor,role:'authenticated',session_id:boundarySession})]);await db.exec('set role authenticated');eq(await rpc('account_ready'),false);
+await as(editor);eq(await rpc('account_ready'),true);
 await as(admin);
 const newSchool=await school('create',{name:'วิทยาลัยใหม่',province:'จังหวัดทดสอบ'});eq(newSchool.id,8);eq(newSchool.is_active,true);
 await deny(school('create',{name:'วิทยาลัยใหม่',province:'จังหวัดทดสอบ'}),/ซ้ำ/);

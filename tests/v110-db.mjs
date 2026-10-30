@@ -1,3 +1,4 @@
+import {signInAs} from './helpers/auth-session.mjs';
 // Isolated PostgreSQL verification. No production credentials or personnel are used.
 import fs from 'node:fs/promises';import assert from 'node:assert/strict';
 const {PGlite}=await import(process.env.HR_PGLITE_MODULE||'@electric-sql/pglite');
@@ -14,7 +15,7 @@ await db.exec(`insert into auth.users values('${admin}'),('${editor}'),('${staff
 await db.exec(patch);await db.exec(patch);
 eq((await db.query('select public.hr_schema_version() x')).rows[0].x,'1.10.0');
 eq((await db.query("select full_name,university_rank,administration_field from public.personnel where employee_code='EXISTING'")).rows[0],{full_name:'ทะเบียนเดิม',university_rank:'',administration_field:''});
-async function as(id){await db.exec('reset role');const sid=crypto.randomUUID();await db.query('insert into auth.sessions(id,user_id) values($1,$2)',[sid,id]);await db.query("select set_config('request.jwt.claim.sub',$1,false),set_config('request.jwt.claim.role','authenticated',false),set_config('request.jwt.claims',$2,false)",[id,JSON.stringify({sub:id,role:'authenticated',session_id:sid})]);await db.exec('set role authenticated');}
+const as=id=>signInAs(db,id);
 const save=async(p,rev=null)=>(await db.query('select public.save_personnel_reviewed($1::jsonb,null,$2::integer,$3) x',[JSON.stringify(p),rev,'ตรวจสอบข้อมูลทะเบียนแล้ว'])).rows[0].x;
 await as(admin);
 const lecturer=await save({employee_code:'LECTURER',full_name:'อาจารย์ ทดสอบ',school_id:1,position:'อาจารย์',university_rank:'ผู้ช่วยศาสตราจารย์'});
