@@ -2,7 +2,7 @@ import {fields,certificateFields} from './importer.js';
 import {certKinds,educationLevels} from './overview.js';
 import {departmentsFor,unitType} from './structure.js';
 import {personnelOptions,universityRanks} from './personnel-options.js';
-export const templateVersion='1.10';
+export const templateVersion='1.12';
 export const columnName=index=>{let result='';for(let n=index+1;n;n=Math.floor((n-1)/26))result=String.fromCharCode(65+(n-1)%26)+result;return result;};
 const dates=new Set(['birth_date','start_date','issued_on','expires_on']);
 const unique=values=>[...new Set(values.flat().map(v=>String(v??'').trim()).filter(Boolean))];
@@ -15,7 +15,7 @@ export function referenceLists(schools,lookups=[],people=[],certificates=[]){
  list.position=unique([...personnelOptions('position',lookups),...list.position]);
  list.college_department=departmentsFor({unit_type:'college'},lookups);list.institute_department=departmentsFor({unit_type:'institute'},lookups);
  list.department=unique([...list.college_department,...list.institute_department]);
- list.academic_rank=unique([...lookups.filter(l=>l.category==='academic_rank').map(l=>l.name),...list.academic_rank]);
+ list.academic_rank=unique([...personnelOptions('academic_rank',lookups),...list.academic_rank]);
  list.highest_education=unique([...educationLevels,...list.highest_education]);
  list.education_majors=unique(list.education_majors.flatMap(v=>v.split(';')));
  list.university_rank=universityRanks;
@@ -33,14 +33,15 @@ export function templateSheets(schools,lookups=[],options={}){
  return [
   ['บุคลากร',[fields.map(f=>f[1])]],['ใบรับรองวิชาชีพ',[certificateFields.map(f=>f[1])]],
   ['คำแนะนำ',[
-   ['รายการ','คำชี้แจง'],['รุ่นแม่แบบ','HRVec-Andaman2 รุ่น 1.10 วันที่ พ.ศ. และรายการเลือก'],
+   ['รายการ','คำชี้แจง'],['รุ่นแม่แบบ','HRVec-Andaman2 รุ่น 1.12 รายการเลือกตรงกับฟอร์ม'],
    ['รายชื่อ','กรอกชีต บุคลากร หนึ่งคนต่อแถว เริ่มแถว 2 คงชื่อชีตและหัวคอลัมน์'],
    ['ข้อมูลจำเป็น','เลขที่ตำแหน่ง ชื่อ-นามสกุล และหน่วยงาน/สถานศึกษา'],
    ['วันที่','กรอก วว/ดด/ปี พ.ศ. 4 หลัก เช่น 29/10/2569 ช่องว่างเตรียมเป็นข้อความเพื่อรักษาปีที่พิมพ์ วันที่เดิมแสดง พ.ศ. โดยเก็บวันที่ Excel'],
    ['แก้วันที่เดิม','หาก Excel แปลงปีผิด ให้เริ่มด้วยเครื่องหมาย apostrophe เช่น \'29/10/2569 เครื่องหมายนี้ไม่เป็นส่วนหนึ่งของข้อมูล'],
    ['ตำแหน่งทางวิชาการ','เลือก อาจารย์ ผู้ช่วยศาสตราจารย์ รองศาสตราจารย์ หรือศาสตราจารย์ แยกจากวิทยฐานะ'],
    ['พนักงานบริหารงานทั่วไป','เลือกชื่อตำแหน่ง แล้วเลือกหรือกรอก ด้านงานบริหารทั่วไป ตามหน้าที่ที่ได้รับมอบหมาย'],
-   ['รายการเลือก','กดเซลล์แล้วเลือกลูกศร ช่องข้อความเพิ่มเติมกรอกเองได้ รายการอ้างอิงตั้งแต่คอลัมน์ H แก้หรือเพิ่มต่อเนื่องได้ถึงแถว 1001'],
+   ['รายการเลือก','เลือกเซลล์แล้วกดลูกศรด้านขวาหรือ Alt + ลูกศรลง หน่วยงาน ตำแหน่ง ฝ่าย วิทยฐานะ วุฒิ ตำแหน่งทางวิชาการ ด้านงาน และประเภทใบรับรองอ้างอิงรายการเดียวกับฟอร์ม'],
+   ['รายการล่าสุด','เมื่อแอดมินเพิ่มรายการในระบบ ให้ดาวน์โหลดแม่แบบจากเว็บใหม่ ไฟล์ Excel ที่บันทึกไว้แล้วไม่เปลี่ยนตามระบบอัตโนมัติ'],
    ['ฝ่าย','ฝ่ายและส่วนราชการต้องตรงกับหน่วยงาน ผู้อำนวยการเว้นว่างได้'],
    ['หลายสาขาวิชา','สาขาของวุฒิสูงสุดหลายสาขาคั่นด้วย ; เช่น การบริหารการศึกษา; เทคโนโลยีการศึกษา'],
    ['หลายใบรับรอง','หนึ่งใบต่อหนึ่งแถวในชีต ใบรับรองวิชาชีพ เลือกเลขที่ตำแหน่งจากชีต บุคลากร ไม่เพิ่มคอลัมน์'],
