@@ -7,7 +7,7 @@
 - npm run check ผ่าน syntax ทุกโมดูลที่โครงการกำหนด รวม photos.js และ personnel-order.js
 - TZ=Asia/Bangkok node --test tests/*.test.mjs: 116 ผ่าน, fail 0
 - TZ=UTC node --test tests/*.test.mjs: 116 ผ่าน, fail 0
-- tests/schools-db.mjs: 76 PostgreSQL assertions ผ่าน
+- tests/schools-db.mjs: 81 PostgreSQL assertions ผ่าน
 - tests/institute-db.mjs: 40 assertions ผ่าน
 - tests/v110-db.mjs: 15 assertions ผ่าน
 - tests/v111-db.mjs: 26 assertions ผ่าน
@@ -59,3 +59,7 @@ https://supabase.com/docs/guides/auth/password-security#password-strength-and-le
 ไม่ได้ใช้รหัสผ่านบัญชีจริง ไม่เปลี่ยนรูปของบุคคลจริง และไม่ได้อัปโหลดไฟล์เข้า Drive หรือ Deploy Apps Script ของผู้ใช้ ให้ตรวจการเลือกรูป ล็อกอินบัญชีจริง และวงจร Drive / Sheets ตามคู่มือหลังอัปเดต GitHub
 
 แม่แบบ Excel ไม่มีการแก้ในรุ่นนี้ โครงสร้าง 1.10 ยังคงใช้ได้ การทดสอบอ่าน/เขียนแม่แบบและตรวจ Drop-down เดิมยังผ่าน
+
+## แก้ CI จาก Error ที่ผู้ใช้รายงาน
+
+แก้ตัวสร้างเซสชันทดสอบให้รอเวลาฐานข้อมูลผ่าน sessions_revoked_before ก่อนสร้างเซสชัน เพิ่ม 5 assertions ที่ขอบเขตเวลาเท่ากัน ตรวจว่าเซสชันเก่ายังถูกปฏิเสธ ส่วนเซสชันใหม่ใช้ได้ ผ่าน Node.js 22.14.0 และ 24 โดยไม่เปลี่ยน SQL หรือสิทธิ์ระบบจริง ดู CI-FIX-20261030-TH.md

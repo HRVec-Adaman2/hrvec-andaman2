@@ -1,6 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';import vm from 'node:vm';import fs from 'node:fs';
 import {workbookAPI,normalizeXlsx} from '../dist/xlsx-compat.js';import {readImportFile,validateWorkbookImport} from '../dist/importer.js';
-import {templateSheets} from '../dist/template.js';
+import {templateSheets,referenceColumns,referenceLists} from '../dist/template.js';
 import {fields,certificateFields} from '../dist/importer.js';
 globalThis.window={};vm.runInThisContext(fs.readFileSync('dist/vendor/fflate-0.8.2.min.js','utf8'));window.fflate=globalThis.fflate||window.fflate;vm.runInThisContext(fs.readFileSync('dist/vendor/exceljs-4.4.0.min.js','utf8'));
 const ExcelJS=window.ExcelJS;let saved;const xlsx=workbookAPI(ExcelJS,async(blob,name)=>{saved={blob,name};},window.fflate);
@@ -42,4 +42,14 @@ test('the distributed template carries native dropdowns, dependent departments a
  assert.equal(wb.getWorksheet('ตัวอย่าง').getCell('H2').value.toISOString().slice(0,10),'1985-05-15');
  const imported=await readImportFile({name:'blank.xlsx',size:bytes.length,arrayBuffer:async()=>bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength)},xlsx);
  assert.equal(imported.matrix.slice(1).filter(r=>r.some(v=>v!==''&&v!=null)).length,0);
+});
+test('distributed Excel lists contain every current form choice and show native dropdown arrows',async()=>{
+ const config=JSON.parse(fs.readFileSync('deployment/template-reference.json','utf8')),expected=referenceLists(config.schools,config.lookups);
+ const bytes=fs.readFileSync('dist/HRVec-Andaman2-Personnel-Template.xlsx'),normalized=normalizeXlsx(bytes,window.fflate),wb=new ExcelJS.Workbook();await wb.xlsx.load(normalized);
+ const refs=wb.getWorksheet('รายการอ้างอิง'),people=wb.getWorksheet('บุคลากร');
+ for(const key of ['school_id','position','academic_rank','highest_education','university_rank','administration_field','kind','college_department','institute_department']){
+  const col=referenceColumns.find(r=>r.key===key).column,values=[];for(let row=2;row<=1001;row++){const value=refs.getCell(col+row).value;if(value!==null&&value!=='')values.push(value);}assert.deepEqual(values,expected[key],key);
+ }
+ for(const col of ['C','D','E','G','L','N','O']){assert.equal(people.getCell(col+'2').dataValidation.type,'list');assert.equal(people.getCell(col+'501').dataValidation.type,'list');}
+ const files=window.fflate.unzipSync(new Uint8Array(normalized));for(const name of ['xl/worksheets/sheet1.xml','xl/worksheets/sheet2.xml'])assert.doesNotMatch(window.fflate.strFromU8(files[name]),/<(?:[A-Za-z]+:)?dataValidation\b[^>]*showDropDown="(?:1|true)"/);
 });

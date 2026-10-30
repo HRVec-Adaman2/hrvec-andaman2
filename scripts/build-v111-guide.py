@@ -36,7 +36,7 @@ while i<len(lines):
 paths=[root/'README.md',root/'package.json',root/'.github/workflows/pages.yml',root/'.env.example',root/'supabase/config.toml',root/'supabase/schema.sql',root/'supabase/upgrade-v1.11.sql',root/'scripts/bootstrap-admin.mjs',root/'scripts/bootstrap.env.example']
 paths+=sorted((root/'dist').glob('*.js'))+[root/'dist/index.html',root/'dist/style.css',root/'dist/theme.css']
 paths+=sorted((root/'supabase/functions').rglob('*.ts'))+sorted((root/'supabase/functions').rglob('*.js'))
-paths+=sorted((root/'apps-script').glob('*'))+[root/'tests/photos.test.mjs',root/'tests/personnel-order.test.mjs',root/'tests/privacy-flow.test.mjs',root/'tests/v111-db.mjs']
+paths+=sorted((root/'apps-script').glob('*'))+[root/'tests/helpers/auth-session.mjs',root/'tests/photos.test.mjs',root/'tests/personnel-order.test.mjs',root/'tests/privacy-flow.test.mjs',root/'tests/v111-db.mjs']
 files=[]
 for p in paths:
  if not p.is_file():continue

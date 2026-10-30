@@ -1,0 +1,223 @@
+{
+  "lookups": [
+    {
+      "name": "ชำนาญการ",
+      "category": "academic_rank"
+    },
+    {
+      "name": "ชำนาญการพิเศษ",
+      "category": "academic_rank"
+    },
+    {
+      "name": "เชี่ยวชาญ",
+      "category": "academic_rank"
+    },
+    {
+      "name": "เชี่ยวชาญพิเศษ",
+      "category": "academic_rank"
+    },
+    {
+      "name": "ไม่มีวิทยฐานะ",
+      "category": "academic_rank"
+    },
+    {
+      "name": "การเงินและบัญชี",
+      "category": "administration_field"
+    },
+    {
+      "name": "เทคโนโลยีสารสนเทศ",
+      "category": "administration_field"
+    },
+    {
+      "name": "บริหารงานบุคคล",
+      "category": "administration_field"
+    },
+    {
+      "name": "ประสานงานและความร่วมมือ",
+      "category": "administration_field"
+    },
+    {
+      "name": "แผนงานและงบประมาณ",
+      "category": "administration_field"
+    },
+    {
+      "name": "พัสดุ",
+      "category": "administration_field"
+    },
+    {
+      "name": "สารบรรณและธุรการ",
+      "category": "administration_field"
+    },
+    {
+      "name": "ฝ่ายกิจการนักเรียน นักศึกษา",
+      "category": "department"
+    },
+    {
+      "name": "ฝ่ายบริหารทรัพยากร",
+      "category": "department"
+    },
+    {
+      "name": "ฝ่ายยุทธศาสตร์และแผนงาน",
+      "category": "department"
+    },
+    {
+      "name": "ฝ่ายวิชาการ",
+      "category": "department"
+    },
+    {
+      "name": "ศูนย์วิจัยและพัฒนาการอาชีวศึกษา",
+      "category": "institute_department"
+    },
+    {
+      "name": "สำนักงานผู้อำนวยการสถาบัน",
+      "category": "institute_department"
+    },
+    {
+      "name": "สำนักพัฒนากิจการนักศึกษาและกิจการพิเศษ",
+      "category": "institute_department"
+    },
+    {
+      "name": "สำนักพัฒนายุทธศาสตร์และความร่วมมืออาชีวศึกษา",
+      "category": "institute_department"
+    },
+    {
+      "name": "อาชีวศึกษาบัณฑิต",
+      "category": "institute_department"
+    },
+    {
+      "name": "ครู",
+      "category": "position"
+    },
+    {
+      "name": "ครูผู้ช่วย",
+      "category": "position"
+    },
+    {
+      "name": "เจ้าหน้าที่",
+      "category": "position"
+    },
+    {
+      "name": "ผู้ช่วยผู้อำนวยการสถาบัน",
+      "category": "position"
+    },
+    {
+      "name": "ผู้อำนวยการ",
+      "category": "position"
+    },
+    {
+      "name": "ผู้อำนวยการศูนย์",
+      "category": "position"
+    },
+    {
+      "name": "ผู้อำนวยการสถาบัน",
+      "category": "position"
+    },
+    {
+      "name": "ผู้อำนวยการสำนัก",
+      "category": "position"
+    },
+    {
+      "name": "ผู้อำนวยการสำนักงาน",
+      "category": "position"
+    },
+    {
+      "name": "พนักงานบริหารงานทั่วไป",
+      "category": "position"
+    },
+    {
+      "name": "พนักงานราชการ",
+      "category": "position"
+    },
+    {
+      "name": "รองผู้อำนวยการ",
+      "category": "position"
+    },
+    {
+      "name": "รองผู้อำนวยการสถาบัน",
+      "category": "position"
+    },
+    {
+      "name": "หัวหน้างาน",
+      "category": "position"
+    },
+    {
+      "name": "อาจารย์",
+      "category": "position"
+    },
+    {
+      "name": "เกษียณอายุ",
+      "category": "status"
+    },
+    {
+      "name": "ปฏิบัติงาน",
+      "category": "status"
+    },
+    {
+      "name": "ย้าย",
+      "category": "status"
+    },
+    {
+      "name": "ลาออก",
+      "category": "status"
+    }
+  ],
+  "schools": [
+    {
+      "id": 1,
+      "name": "วิทยาลัยเทคนิคระนอง",
+      "province": "ระนอง",
+      "is_active": true,
+      "unit_type": "college"
+    },
+    {
+      "id": 2,
+      "name": "วิทยาลัยเทคนิคพังงา",
+      "province": "พังงา",
+      "is_active": true,
+      "unit_type": "college"
+    },
+    {
+      "id": 3,
+      "name": "วิทยาลัยเทคนิคภูเก็ต",
+      "province": "ภูเก็ต",
+      "is_active": true,
+      "unit_type": "college"
+    },
+    {
+      "id": 4,
+      "name": "วิทยาลัยอาชีวศึกษาภูเก็ต",
+      "province": "ภูเก็ต",
+      "is_active": true,
+      "unit_type": "college"
+    },
+    {
+      "id": 5,
+      "name": "วิทยาลัยเทคนิคกระบี่",
+      "province": "กระบี่",
+      "is_active": true,
+      "unit_type": "college"
+    },
+    {
+      "id": 6,
+      "name": "วิทยาลัยเทคนิคตรัง",
+      "province": "ตรัง",
+      "is_active": true,
+      "unit_type": "college"
+    },
+    {
+      "id": 7,
+      "name": "วิทยาลัยการอาชีพตรัง",
+      "province": "ตรัง",
+      "is_active": true,
+      "unit_type": "college"
+    },
+    {
+      "id": 8,
+      "name": "สถาบันการอาชีวศึกษาภาคใต้ 2",
+      "province": "ภูเก็ต",
+      "is_active": true,
+      "unit_type": "institute"
+    }
+  ],
+  "schema_version": "1.11.0"
+}

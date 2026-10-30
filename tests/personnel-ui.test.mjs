@@ -49,3 +49,11 @@ test('dedicated photo management shows a preview and reviews removal before savi
  await submit(form('photoform',{remove_avatar:'on'}));html=elements.get('#modalbody').innerHTML;assert.match(html,/photo-comparison/);assert.match(html,/รูปเดิม/);assert.match(html,/รูปใหม่/);assert.equal((await api.all('personnel'))[0].avatar_data,photo);
  await submit(form('personreviewform',{reviewed:'on',reason:'เจ้าของข้อมูลขอลบรูปถ่าย'}));p=(await api.all('personnel')).find(p=>p.id==='demo-0');assert.equal(p.avatar_data,null);const history=await api.all('personnel_changes');assert.doesNotMatch(JSON.stringify(history),/data:image\/|aGVsbG8=/);assert.ok(history.some(h=>h.reason==='เจ้าของข้อมูลขอลบรูปถ่าย'));
 });
+test('downloaded blank template contains current form choices without copying personnel contacts into references',async()=>{
+ api.demoRole('admin');api.openDemoDetails();await navigate('#personnel');let saved;
+ const stub={utils:{book_new:()=>({sheets:[]}),aoa_to_sheet:rows=>({rows}),book_append_sheet:(b,s,name)=>b.sheets.push({name,...s})},writeFile:async(book,name)=>{saved={book,name};}};
+ window.XLSX=stub;globalThis.XLSX=stub;await click({action:'downloadtemplate'});
+ assert.equal(saved.name,'HRVec-Andaman2-v1.12-Personnel-Template.xlsx');
+ const refs=saved.book.sheets.find(s=>s.name==='รายการอ้างอิง');assert.match(JSON.stringify(refs.rows),/ผู้อำนวยการ|พนักงานบริหารงานทั่วไป/);assert.doesNotMatch(JSON.stringify(refs.rows),/บุคลากรตัวอย่าง|@example\.com|0899999999/);
+ delete window.XLSX;delete globalThis.XLSX;
+});
