@@ -1,6 +1,6 @@
 // Workbook API used by the app, backed by the locally shipped ExcelJS browser build.
 // Formula cells are preserved as metadata so the importer can reject them.
-import {templateValidations} from './template.js';
+import {templateValidations,templateNamedRanges} from './template.js?v=1.12.1';
 import {normalizedDate,excelBuddhistFormat} from './dates.js';
 const address=(r,c)=>{let letters='';for(let n=c+1;n;n=Math.floor((n-1)/26))letters=String.fromCharCode(65+(n-1)%26)+letters;return letters+(r+1);};
 const position=s=>{const m=/^([A-Z]+)([1-9]\d*)$/i.exec(s);if(!m)throw Error('ขอบเขต Excel ไม่ถูกต้อง');let c=0;for(const x of m[1].toUpperCase())c=c*26+x.charCodeAt(0)-64;return {r:+m[2]-1,c:c-1};};
@@ -36,15 +36,21 @@ export function workbookAPI(ExcelJS,saveFile,zip=typeof window!=='undefined'?win
   },
   async writeFile(book,name){
    const output=new ExcelJS.Workbook();output.creator='HRVec-Andaman2';
-   for(const name of book.SheetNames){const source=book.Sheets[name],ws=output.addWorksheet(name),rows=utils.sheet_to_json(source);ws.addRows(rows);ws.views=[{state:'frozen',ySplit:1}];
-    ws.getRow(1).font={name:'Tahoma',bold:true,color:{argb:'FFFFFFFF'},size:11};ws.getRow(1).height=30;
+   const isTemplate=Boolean(book.Sheets['รายการอ้างอิง']&&book.Sheets['บุคลากร']),refRows=isTemplate?utils.sheet_to_json(book.Sheets['รายการอ้างอิง']):[],units=refRows.slice(1).filter(r=>typeof r[0]==='number').length;
+   for(const name of book.SheetNames)output.addWorksheet(name);
+   if(isTemplate){for(const {name,range}of templateNamedRanges(refRows,units))output.definedNames.add(range,name);output.views=[{activeTab:Math.max(0,book.SheetNames.indexOf('บุคลากร')),firstSheet:0}];}
+   for(const name of book.SheetNames){const source=book.Sheets[name],ws=output.getWorksheet(name),rows=utils.sheet_to_json(source);ws.addRows(rows);ws.views=[{state:'frozen',ySplit:1,...(isTemplate&&['บุคลากร','ใบรับรองวิชาชีพ'].includes(name)?{activeCell:name==='บุคลากร'?'C2':'B2',topLeftCell:'A2'}:{})}];
+    ws.getRow(1).font={name:'Tahoma',bold:true,color:{argb:'FFFFFFFF'},size:11};ws.getRow(1).height=isTemplate?44:30;
     ws.getRow(1).eachCell(cell=>{cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF315B91'}};cell.alignment={vertical:'middle',wrapText:true};});
     if(source['!cols'])ws.columns.forEach((col,i)=>{col.width=source['!cols'][i]?.wch||22;});
-    for(let i=2;i<=Math.max(ws.rowCount,200);i++){const row=ws.getRow(i);if(i<=ws.rowCount){row.font={name:'Tahoma',size:11};row.alignment={vertical:'top',wrapText:true};}if(['บุคลากร','ใบรับรองวิชาชีพ'].includes(name)){for(let c=1;c<=rows[0].length;c++)row.getCell(c).numFmt='@';}}
-    if(['บุคลากร','ใบรับรองวิชาชีพ'].includes(name)){
-     const refRows=utils.sheet_to_json(book.Sheets['รายการอ้างอิง']||{}),units=refRows.slice(1).filter(r=>typeof r[0]==='number').length||8;
+    const lastInputRow=isTemplate&&name==='บุคลากร'?501:isTemplate&&name==='ใบรับรองวิชาชีพ'?5001:200;
+    for(let i=2;i<=Math.max(ws.rowCount,lastInputRow);i++){const row=ws.getRow(i);if(i<=ws.rowCount){row.font={name:'Tahoma',size:11};row.alignment={vertical:'top',wrapText:true};}if(['บุคลากร','ใบรับรองวิชาชีพ'].includes(name)){for(let c=1;c<=rows[0].length;c++)row.getCell(c).numFmt='@';}}
+    if(isTemplate&&['บุคลากร','ใบรับรองวิชาชีพ'].includes(name)){
      for(const rule of templateValidations(name,units))ws.dataValidations.add(rule.range,{type:rule.type,formulae:[rule.formula],allowBlank:true,showErrorMessage:rule.strict||rule.type==='custom',errorStyle:'stop',errorTitle:'ข้อมูลไม่ตรงรูปแบบ',error:rule.type==='custom'?'กรอกวันที่ วว/ดด/ปี พ.ศ. 4 หลัก':'เลือกรายการจากข้อมูลอ้างอิง',showInputMessage:true,promptTitle:rule.label,prompt:rule.type==='custom'?'วว/ดด/ปี พ.ศ. เช่น 29/10/2569':rule.strict?'เลือกจากรายการอ้างอิง':'เลือกจากรายการหรือกรอกข้อความเพิ่มเติม'});
      ws.autoFilter={from:{row:1,column:1},to:{row:1,column:rows[0].length}};
+     const choices=name==='บุคลากร'?['C','D','E','G','L','N','O']:['A','B'];
+     for(const col of choices){for(let row=2;row<=lastInputRow;row++){const cell=ws.getCell(col+row);cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFEDF4FF'}};cell.font={name:'Tahoma',size:11,color:{argb:'FF24518A'}};}}
+     for(const [col,width]of Object.entries(name==='บุคลากร'?{C:48,D:36,E:42,G:28,L:28,N:30,O:34}:{A:24,B:44}))ws.getColumn(col).width=width;
     }
     if(['บุคลากร','ใบรับรองวิชาชีพ','ตัวอย่าง','ตัวอย่างใบรับรอง'].includes(name)){
      const labels=rows[0]||[];for(const label of ['วันเกิด','วันเริ่มงาน','วันที่ออก','วันหมดอายุ']){
@@ -57,4 +63,4 @@ export function workbookAPI(ExcelJS,saveFile,zip=typeof window!=='undefined'?win
   }
  };
 }
-if(typeof window!=='undefined'&&window.ExcelJS)window.XLSX=workbookAPI(window.ExcelJS,(blob,name)=>{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);});
+if(typeof window!=='undefined'&&window.ExcelJS)window.XLSX=workbookAPI(window.ExcelJS,(blob,name)=>{const a=document.createElement('a'),url=URL.createObjectURL(blob);a.href=url;a.download=name;a.hidden=true;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);});

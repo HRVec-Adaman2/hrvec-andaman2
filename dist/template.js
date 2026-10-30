@@ -1,8 +1,8 @@
 import {fields,certificateFields} from './importer.js';
 import {certKinds,educationLevels} from './overview.js';
 import {departmentsFor,unitType} from './structure.js';
-import {personnelOptions,universityRanks} from './personnel-options.js';
-export const templateVersion='1.12';
+import {personnelOptions,universityRanks} from './personnel-options.js?v=1.12.1';
+export const templateVersion='1.12.1';
 export const columnName=index=>{let result='';for(let n=index+1;n;n=Math.floor((n-1)/26))result=String.fromCharCode(65+(n-1)%26)+result;return result;};
 const dates=new Set(['birth_date','start_date','issued_on','expires_on']);
 const unique=values=>[...new Set(values.flat().map(v=>String(v??'').trim()).filter(Boolean))];
@@ -33,14 +33,15 @@ export function templateSheets(schools,lookups=[],options={}){
  return [
   ['บุคลากร',[fields.map(f=>f[1])]],['ใบรับรองวิชาชีพ',[certificateFields.map(f=>f[1])]],
   ['คำแนะนำ',[
-   ['รายการ','คำชี้แจง'],['รุ่นแม่แบบ','HRVec-Andaman2 รุ่น 1.12 รายการเลือกตรงกับฟอร์ม'],
+   ['รายการ','คำชี้แจง'],['รุ่นแม่แบบ','HRVec-Andaman2 รุ่น 1.12.1 รายการเลือกตรงกับฟอร์ม'],
    ['รายชื่อ','กรอกชีต บุคลากร หนึ่งคนต่อแถว เริ่มแถว 2 คงชื่อชีตและหัวคอลัมน์'],
    ['ข้อมูลจำเป็น','เลขที่ตำแหน่ง ชื่อ-นามสกุล และหน่วยงาน/สถานศึกษา'],
    ['วันที่','กรอก วว/ดด/ปี พ.ศ. 4 หลัก เช่น 29/10/2569 ช่องว่างเตรียมเป็นข้อความเพื่อรักษาปีที่พิมพ์ วันที่เดิมแสดง พ.ศ. โดยเก็บวันที่ Excel'],
    ['แก้วันที่เดิม','หาก Excel แปลงปีผิด ให้เริ่มด้วยเครื่องหมาย apostrophe เช่น \'29/10/2569 เครื่องหมายนี้ไม่เป็นส่วนหนึ่งของข้อมูล'],
    ['ตำแหน่งทางวิชาการ','เลือก อาจารย์ ผู้ช่วยศาสตราจารย์ รองศาสตราจารย์ หรือศาสตราจารย์ แยกจากวิทยฐานะ'],
    ['พนักงานบริหารงานทั่วไป','เลือกชื่อตำแหน่ง แล้วเลือกหรือกรอก ด้านงานบริหารทั่วไป ตามหน้าที่ที่ได้รับมอบหมาย'],
-   ['รายการเลือก','เลือกเซลล์แล้วกดลูกศรด้านขวาหรือ Alt + ลูกศรลง หน่วยงาน ตำแหน่ง ฝ่าย วิทยฐานะ วุฒิ ตำแหน่งทางวิชาการ ด้านงาน และประเภทใบรับรองอ้างอิงรายการเดียวกับฟอร์ม'],
+   ['รายการเลือก','เปิดชีต บุคลากร เลือก C2 แล้วกดลูกศรด้านขวาหรือ Alt + ลูกศรลง ช่องสีฟ้ามีรายการเลือก หน่วยงาน ตำแหน่ง ฝ่าย วิทยฐานะ วุฒิ ตำแหน่งทางวิชาการ และด้านงานตรงกับฟอร์ม'],
+   ['ใบรับรอง','เปิดชีต ใบรับรองวิชาชีพ เลือก B2 เพื่อเลือกประเภทใบรับรอง ช่อง A เลือกเลขที่ตำแหน่งหลังกรอกชีต บุคลากร แล้ว'],
    ['รายการล่าสุด','เมื่อแอดมินเพิ่มรายการในระบบ ให้ดาวน์โหลดแม่แบบจากเว็บใหม่ ไฟล์ Excel ที่บันทึกไว้แล้วไม่เปลี่ยนตามระบบอัตโนมัติ'],
    ['ฝ่าย','ฝ่ายและส่วนราชการต้องตรงกับหน่วยงาน ผู้อำนวยการเว้นว่างได้'],
    ['หลายสาขาวิชา','สาขาของวุฒิสูงสุดหลายสาขาคั่นด้วย ; เช่น การบริหารการศึกษา; เทคโนโลยีการศึกษา'],
@@ -56,17 +57,24 @@ export function templateSheets(schools,lookups=[],options={}){
   ['ตัวอย่างใบรับรอง',[certificateFields.map(f=>f[1]),...['01','02'].map((suffix,i)=>[examples[0]?.employee_code||'EXAMPLE001',certKinds.competency,'คุณวุฒิวิชาชีพตัวอย่าง '+suffix,'หน่วยงานตัวอย่าง','CERT-'+suffix,'01/01/2568',i?'':'01/01/2571','เทคโนโลยีสารสนเทศ','ระดับ 4','มาตรฐานอาชีพตัวอย่าง'])]]
  ];
 }
-function referenceFormula(key){const c=referenceColumns.find(r=>r.key===key).column;return `INDIRECT("'รายการอ้างอิง'!$${c}$2:$${c}$"&MAX(2,COUNTA('รายการอ้างอิง'!$${c}$2:$${c}$1001)+1))`;}
+export const templateRangeName=key=>'HRV_'+key;
+export function templateNamedRanges(referenceRows,unitCount=8){
+ const names=referenceColumns.map(({key,column})=>{
+  const index=column.split('').reduce((a,c)=>a*26+c.charCodeAt(0)-64,0)-1;
+  let end=2;for(let row=1;row<Math.min(referenceRows.length,1001);row++)if(referenceRows[row]?.[index]!==''&&referenceRows[row]?.[index]!=null)end=row+1;
+  return {name:templateRangeName(key),range:`'รายการอ้างอิง'!$${column}$2:$${column}$${end}`};
+ });
+ return [...names,{name:'HRV_Units',range:`'รายการอ้างอิง'!$B$2:$D$${Math.max(2,unitCount+1)}`},{name:'HRV_PersonnelCodes',range:"'บุคลากร'!$A$2:$A$501"}];
+}
 export function templateValidations(name,unitCount=8){
  const definitions=name==='บุคลากร'?fields:name==='ใบรับรองวิชาชีพ'?certificateFields:[];
  return definitions.map(([key,label],i)=>{
   const col=columnName(i),end=name==='บุคลากร'?501:5001,range=`${col}2:${col}${end}`;
   if(dates.has(key))return {key,label,range,type:'custom',formula:`OR(${col}2="",ISNUMBER(${col}2),AND(ISTEXT(${col}2),LEN(${col}2)>=8,LEN(${col}2)<=10))`};
-  if(name==='ใบรับรองวิชาชีพ'&&key==='employee_code')return {key,label,range,type:'list',formula:`INDIRECT("'บุคลากร'!$A$2:$A$"&MAX(2,COUNTA('บุคลากร'!$A$2:$A$501)+1))`,strict:true};
+  if(name==='ใบรับรองวิชาชีพ'&&key==='employee_code')return {key,label,range,type:'list',formula:'HRV_PersonnelCodes',strict:true};
   if(key==='department'){
-   const a=referenceColumns.find(r=>r.key==='institute_department').column,b=referenceColumns.find(r=>r.key==='college_department').column;
-   return {key,label,range,type:'list',formula:`INDIRECT("'รายการอ้างอิง'!"&IF(IFERROR(VLOOKUP($C2,'รายการอ้างอิง'!$B$2:$D$${unitCount+1},3,0),"")="ส่วนกลางสถาบัน","${a}2:${a}1001","${b}2:${b}1001"))`,strict:true};
+   return {key,label,range,type:'list',formula:'INDIRECT(IF(IFERROR(VLOOKUP($C2,HRV_Units,3,0),"")="ส่วนกลางสถาบัน","HRV_institute_department","HRV_college_department"))',strict:true};
   }
-  return {key,label,range,type:'list',formula:referenceFormula(key),strict:['school_id','position','academic_rank','university_rank','kind'].includes(key)};
+  return {key,label,range,type:'list',formula:templateRangeName(key),strict:['school_id','position','academic_rank','university_rank','kind'].includes(key)};
  });
 }

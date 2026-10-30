@@ -30,7 +30,7 @@ test('academic titles and administration fields round-trip in a linked Thai work
 test('templates expose lists for all text columns, dependent departments and linked certificate identifiers',()=>{
  const a=templateValidations('บุคลากร'),b=templateValidations('ใบรับรองวิชาชีพ');
  assert.equal(a.length,15);assert.equal(a.filter(r=>r.type==='list').length,13);assert.equal(b.filter(r=>r.type==='list').length,8);
- assert.match(a.find(r=>r.key==='department').formula,/VLOOKUP/);assert.match(b[0].formula,/บุคลากร/);
+ assert.match(a.find(r=>r.key==='department').formula,/VLOOKUP/);assert.equal(b[0].formula,'HRV_PersonnelCodes');
  assert.ok([...a,...b].every(r=>r.formula.length<=255));
  const tabs=new Map(templateSheets([{id:9,name:'วิทยาลัย ทดสอบ',unit_type:'college'}]));
  assert.ok(tabs.get('รายการอ้างอิง').some(r=>r.includes('พนักงานบริหารงานทั่วไป')));

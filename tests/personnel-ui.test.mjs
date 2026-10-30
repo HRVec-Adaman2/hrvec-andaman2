@@ -53,7 +53,7 @@ test('downloaded blank template contains current form choices without copying pe
  api.demoRole('admin');api.openDemoDetails();await navigate('#personnel');let saved;
  const stub={utils:{book_new:()=>({sheets:[]}),aoa_to_sheet:rows=>({rows}),book_append_sheet:(b,s,name)=>b.sheets.push({name,...s})},writeFile:async(book,name)=>{saved={book,name};}};
  window.XLSX=stub;globalThis.XLSX=stub;await click({action:'downloadtemplate'});
- assert.equal(saved.name,'HRVec-Andaman2-v1.12-Personnel-Template.xlsx');
+ assert.equal(saved.name,'HRVec-Andaman2-v1.12.1-Personnel-Template.xlsx');
  const refs=saved.book.sheets.find(s=>s.name==='รายการอ้างอิง');assert.match(JSON.stringify(refs.rows),/ผู้อำนวยการ|พนักงานบริหารงานทั่วไป/);assert.doesNotMatch(JSON.stringify(refs.rows),/บุคลากรตัวอย่าง|@example\.com|0899999999/);
  delete window.XLSX;delete globalThis.XLSX;
 });

@@ -53,3 +53,42 @@ test('distributed Excel lists contain every current form choice and show native 
  for(const col of ['C','D','E','G','L','N','O']){assert.equal(people.getCell(col+'2').dataValidation.type,'list');assert.equal(people.getCell(col+'501').dataValidation.type,'list');}
  const files=window.fflate.unzipSync(new Uint8Array(normalized));for(const name of ['xl/worksheets/sheet1.xml','xl/worksheets/sheet2.xml'])assert.doesNotMatch(window.fflate.strFromU8(files[name]),/<(?:[A-Za-z]+:)?dataValidation\b[^>]*showDropDown="(?:1|true)"/);
 });
+
+async function downloadTemplate(schools,lookups=[]){
+ const book=xlsx.utils.book_new();for(const [name,rows]of templateSheets(schools,lookups))xlsx.utils.book_append_sheet(book,xlsx.utils.aoa_to_sheet(rows),name);
+ let file;const writer=workbookAPI(ExcelJS,async(blob,name)=>{file={bytes:new Uint8Array(await blob.arrayBuffer()),name};},window.fflate);await writer.writeFile(book,'downloaded.xlsx');
+ const reader=new ExcelJS.Workbook();await reader.xlsx.load(file.bytes);return {reader,...file};
+}
+function namedValues(book,name){
+ const ranges=book.definedNames.getRanges(name).ranges;assert.equal(ranges.length,1,'one workbook-level range for '+name);
+ const match=/^'?([^']+)'?!\$?([A-Z]+)\$?(\d+)(?::\$?([A-Z]+)\$?(\d+))?$/.exec(ranges[0]);assert.ok(match,ranges[0]);
+ const sheet=book.getWorksheet(match[1]),values=[];for(let row=+match[3];row<=+(match[5]||match[3]);row++){const value=sheet.getCell(match[2]+row).value;if(value!==null&&value!=='')values.push(value);}return values;
+}
+test('the web-generated XLSX resolves populated named dropdowns and opens on the first institution cell',async()=>{
+ const config=JSON.parse(fs.readFileSync('deployment/template-reference.json','utf8')),expected=referenceLists(config.schools,config.lookups),{reader,bytes}=await downloadTemplate(config.schools,config.lookups);
+ const people=reader.getWorksheet('บุคลากร'),certificates=reader.getWorksheet('ใบรับรองวิชาชีพ');
+ for(const [col,key]of Object.entries({C:'school_id',D:'position',G:'academic_rank',L:'highest_education',N:'university_rank',O:'administration_field'})){
+  const rule=people.getCell(col+'2').dataValidation;assert.equal(rule.type,'list');assert.equal(rule.formulae[0],'HRV_'+key);assert.deepEqual(namedValues(reader,rule.formulae[0]),expected[key],key);assert.equal(people.getCell(col+'501').dataValidation.type,'list');
+ }
+ assert.deepEqual(namedValues(reader,certificates.getCell('B2').dataValidation.formulae[0]),expected.kind);assert.equal(certificates.getCell('B5001').dataValidation.type,'list');
+ assert.equal(people.views[0].activeCell,'C2');assert.equal(certificates.views[0].activeCell,'B2');assert.equal(people.getCell('C2').fill.fgColor.argb,'FFEDF4FF');
+ assert.equal(people.getCell('C501').fill.fgColor.argb,'FFEDF4FF');assert.equal(people.getCell('A501').numFmt,'@');assert.equal(people.getCell('H501').numFmt,'@');assert.equal(certificates.getCell('A5001').numFmt,'@');assert.equal(certificates.getCell('F5001').numFmt,'@');
+ assert.deepEqual(Array.from({length:15},(_,i)=>people.getCell(1,i+1).value),fields.map(f=>f[1]));assert.equal(people.getCell('C2').value,null);
+ const xml=window.fflate.unzipSync(bytes);for(const path of ['xl/worksheets/sheet1.xml','xl/worksheets/sheet2.xml'])assert.doesNotMatch(window.fflate.strFromU8(xml[path]),/<dataValidation\b[^>]*showDropDown="(?:1|true)"/);
+});
+test('a downloaded template binds dependent departments and new certificate identifiers to workbook names',async()=>{
+ const config=JSON.parse(fs.readFileSync('deployment/template-reference.json','utf8')),expected=referenceLists(config.schools,config.lookups),{reader}=await downloadTemplate(config.schools,config.lookups),people=reader.getWorksheet('บุคลากร'),certificates=reader.getWorksheet('ใบรับรองวิชาชีพ');
+ const formula=people.getCell('E2').dataValidation.formulae[0];assert.match(formula,/VLOOKUP\(\$C2,HRV_Units,3,0\)/);assert.match(formula,/HRV_institute_department/);assert.match(formula,/HRV_college_department/);assert.doesNotMatch(formula,/รายการอ้างอิง.*!/);
+ assert.deepEqual(namedValues(reader,'HRV_college_department'),expected.college_department);assert.deepEqual(namedValues(reader,'HRV_institute_department'),expected.institute_department);
+ assert.equal(people.getCell('E2').dataValidation.allowBlank,true);assert.equal(certificates.getCell('A2').dataValidation.formulae[0],'HRV_PersonnelCodes');assert.deepEqual(reader.definedNames.getRanges('HRV_PersonnelCodes').ranges,["'บุคลากร'!$A$2:$A$501"]);
+ people.getCell('A2').value='000012';assert.equal(people.getCell('A2').numFmt,'@');assert.deepEqual(namedValues(reader,'HRV_PersonnelCodes'),['000012']);
+});
+test('the downloaded dropdown lists follow scoped schools, current additions and Unicode names',async()=>{
+ const schools=[{id:91,name:'วิทยาลัย ทดสอบ (ใหม่)',is_active:true,unit_type:'college'},{id:711,name:'ส่วนกลาง สถาบันทดสอบ',is_active:true,unit_type:'institute'},{id:9,name:'วิทยาลัยปิดใช้งาน',is_active:false}],lookups=[{category:'position',name:'ตำแหน่งเพิ่มใหม่'}];
+ const {reader}=await downloadTemplate(schools,lookups);assert.deepEqual(namedValues(reader,'HRV_school_id'),schools.slice(0,2).map(s=>s.name));assert.ok(namedValues(reader,'HRV_position').includes('ตำแหน่งเพิ่มใหม่'));
+ assert.deepEqual(reader.definedNames.getRanges('HRV_Units').ranges,["'รายการอ้างอิง'!$B$2:$D$3"]);assert.ok(namedValues(reader,'HRV_academic_rank').length>=5);
+});
+test('ordinary exports without a reference sheet do not carry broken template dropdowns',async()=>{
+ const book=xlsx.utils.book_new();xlsx.utils.book_append_sheet(book,xlsx.utils.aoa_to_sheet([['เลขที่ตำแหน่ง','ชื่อ-นามสกุล'],['0001','ข้อมูลตัวอย่าง']]),'บุคลากร');await xlsx.writeFile(book,'export.xlsx');
+ const reader=new ExcelJS.Workbook();await reader.xlsx.load(new Uint8Array(await saved.blob.arrayBuffer()));assert.deepEqual(reader.definedNames.model,[]);assert.equal(reader.getWorksheet('บุคลากร').getCell('C2').dataValidation?.type,undefined);
+});
