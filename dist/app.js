@@ -286,7 +286,7 @@ function administrationDetail(id){const r=data.administration_changes.find(r=>r.
 function schoolReferences(){modal('รหัสสถานศึกษาปัจจุบัน',`<p>ใช้ชื่อเต็มในคอลัมน์ หน่วยงาน/สถานศึกษา ของ Excel สถานศึกษาที่ปิดใช้งานจะไม่นำเข้าข้อมูลใหม่</p>${table(['รหัส','หน่วยงาน/สถานศึกษา','จังหวัด','การใช้งาน'],data.schools.map(s=>[s.id,esc(s.name),esc(s.province),s.is_active===false?'ปิดใช้งาน':'ใช้งาน']))}<div class="modalactions">${btn('ดาวน์โหลดแม่แบบตามสิทธิ์ปัจจุบัน','downloadtemplate','','primary')}</div>`);}
 async function downloadCurrentTemplate(){
  if(!window.XLSX)throw Error('ตัวช่วย Excel ยังไม่พร้อม กรุณาโหลดหน้าใหม่');const wb=XLSX.utils.book_new(),available=data.schools.filter(s=>s.is_active!==false&&(isAdmin()||schoolAccess(s.id,'import')));
- for(const [name,rows] of templateSheets(available,data.lookups)){const sheet=XLSX.utils.aoa_to_sheet(rows);sheet['!cols']=Array.from({length:Math.max(...rows.map(r=>r.length))},(_,i)=>({wch:name==='คำแนะนำ'?(i?100:30):i===1?45:28}));XLSX.utils.book_append_sheet(wb,sheet,name);}await XLSX.writeFile(wb,'HRVec-Andaman2-v1.12-Personnel-Template.xlsx');
+ for(const [name,rows] of templateSheets(available,data.lookups,{personnel:data.personnel.filter(p=>available.some(s=>s.id===p.school_id)),certificates:data.certificates})){const sheet=XLSX.utils.aoa_to_sheet(rows);sheet['!cols']=Array.from({length:Math.max(...rows.map(r=>r.length))},(_,i)=>({wch:name==='คำแนะนำ'?(i?100:30):i===1?45:28}));XLSX.utils.book_append_sheet(wb,sheet,name);}await XLSX.writeFile(wb,'HRVec-Andaman2-v1.10-Personnel-Template.xlsx');
 }
 
 function updatePersonnelSchoolFields(changed=false){
